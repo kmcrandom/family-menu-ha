@@ -27,7 +27,7 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Simple serving variations.
 - Diet compatibility tags.
 - Tags.
-- Selectable label/tag chips.
+- Label/tag filtering opened from the search area.
 
 ## Primary Actions
 
@@ -40,7 +40,8 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Import starter catalog.
 - Export catalog.
 - Open source link.
-- Select or clear a label/tag filter.
+- Open label/tag filters from the search area.
+- Select or clear label/tag filters.
 
 ## Editing Requirements
 
@@ -48,7 +49,9 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Meal numeric fields such as likability, prep minutes, cook minutes, make-ahead score, and leftover quality should use compact short-field widths on desktop and tablet.
 - Meal identity and short metadata fields should share rows where readable, while long text areas such as ingredients, prep tasks, and notes should remain wide.
 - The meal list and meal editor should keep a two-column master/detail layout on desktop and tablet where practical.
-- The meal list panel should show search first, then the meal list, then label/tag filter chips below the list.
+- The meal list panel should show search first, with a compact label/tag filter icon in the search area.
+- The meal list panel should not show a persistent label/tag chip section below the list, because that consumes too much vertical space on phone-sized screens.
+- The meal list card should align near the top of the catalog layout and, on wider screens, should start in line with the meal editor card rather than leaving excessive empty space above it.
 - Variation option rows should keep option name, likability, and archive/restore action on one row on desktop/tablet.
 - Option grocery/prep textareas should use compact multi-column layouts on desktop/tablet and collapse cleanly on phone-sized screens.
 - Protein alternatives should be easy to edit without duplicating the whole meal.
@@ -93,9 +96,11 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Search by meal name, ingredient, protein, dietary profile, tag, and leftover style.
 - Filter active versus archived.
 - Filter by slow cooker, fast weeknight, simple-serving-friendly, vegetarian, vegan, pescatarian, freezer-friendly, or other tags.
-- Show available meal tags or labels as compact selectable chips below the meal list, not above it.
+- Show a compact filter icon in or beside the search bar when label/tag filters are available.
+- Opening the filter control should reveal the available meal tags or labels in a phone-friendly selection UI.
+- The label/tag selection UI should allow selecting and clearing labels without requiring horizontal scrolling.
 - Selecting a tag/label filters the meal list to meals with that tag while keeping text search usable.
-- Selected tag/label filters should be clearly visible and easy to clear.
+- Selected tag/label filters should be clearly visible from the search/filter area and easy to clear.
 
 ## Acceptance Criteria
 
@@ -124,6 +129,9 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - A user can edit meal and option diet tags so common-compatible mode can filter suggestions correctly.
 - A user can archive a meal without breaking old weekly plans or history.
 - A user can find all high-likability meals quickly.
-- A user can select a visible meal tag/label and filter the meal list by that selection.
-- Meal Catalog labels appear below the meal list.
+- A user can open label/tag filters from the search area, select a label, and filter the meal list by that selection.
+- A user can clear the selected label/tag filter from the search/filter area.
+- Meal Catalog labels do not appear as a persistent chip section below the meal list.
+- On phone-sized screens, label/tag filtering remains usable without the filter list being cut off.
+- On wider screens, the meal list card starts in line with the meal editor card.
 - Meal Catalog remains compact enough on desktop and tablet that editing common meal metadata does not require scrolling through a long single-column form.
