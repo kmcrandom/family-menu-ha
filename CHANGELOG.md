@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 - 2026-06-27
+
+- Move Meal Catalog label filtering into the search bar so phone layouts no longer cut off label chips.
+- Add a compact filter menu for selecting labels and a clearable active-label indicator.
+- Align the Meal Catalog list with the editor on wider screens.
+- Ignore macOS `.DS_Store` metadata files.
+
 ## 0.1.3 - 2026-06-27
 
 - Fix Home Assistant sidebar ingress path handling so the UI can load under generated ingress subpaths.

@@ -1,6 +1,6 @@
 ---
 name: Family Menu
-version: "0.1.3"
+version: "0.1.4"
 slug: family_menu
 description: Local-first weekly dinner planning, grocery, and prep app
 url: https://github.com/kmcrandom/family-menu-ha

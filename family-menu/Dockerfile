@@ -2,7 +2,7 @@ ARG BUILD_ARCH=aarch64
 FROM ghcr.io/home-assistant/${BUILD_ARCH}-base:latest
 
 ARG BUILD_ARCH=aarch64
-ARG BUILD_VERSION=0.1.3
+ARG BUILD_VERSION=0.1.4
 
 LABEL \
     io.hass.version="${BUILD_VERSION}" \
