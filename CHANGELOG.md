@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 - 2026-06-27
+
+- Fix Home Assistant sidebar ingress path handling so the UI can load under generated ingress subpaths.
+- Keep direct root access working for trusted reverse proxy hostnames.
+- Add tests for prefixed ingress API, static asset, and SPA route handling.
+
 ## 0.1.2 - 2026-06-27
 
 - Add full-overwrite JSON import/restore from Family Menu exports.
