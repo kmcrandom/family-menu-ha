@@ -47,6 +47,14 @@ def create_app(settings: Settings | None = None, conn: sqlite3.Connection | None
     app.state.store = store
     app.state.settings = settings
 
+    @app.middleware("http")
+    async def ingress_prefix_middleware(request, call_next):
+        path = request.scope.get("path", "")
+        api_marker = "/api/v1"
+        if not path.startswith(api_marker) and api_marker in path:
+            request.scope["path"] = path[path.index(api_marker) :]
+        return await call_next(request)
+
     @app.get("/health", response_model=HealthResponse)
     def health() -> dict:
         return {"status": "ok", "version": __version__}
@@ -254,11 +262,32 @@ def mount_frontend(app: FastAPI, static_dir: Path) -> None:
 
     @app.get("/{path:path}", include_in_schema=False)
     def spa_fallback(path: str):
-        if path.startswith("api/") or path == "health":
+        if path.startswith("api/v1") or path == "health":
             raise HTTPException(status_code=404)
-        candidate = served_dir / path
-        if candidate.exists() and candidate.is_file():
+        candidate = safe_static_file(served_dir, path)
+        if candidate is not None:
             return FileResponse(candidate)
+        if assets_dir.exists() and "/assets/" in f"/{path}":
+            asset_path = f"/{path}".split("/assets/", 1)[1]
+            asset = safe_static_file(assets_dir, asset_path)
+            if asset is not None:
+                return FileResponse(asset)
+        file_name = Path(path).name
+        if file_name:
+            prefixed_asset = safe_static_file(served_dir, file_name)
+            if prefixed_asset is not None:
+                return FileResponse(prefixed_asset)
         if index.exists():
             return FileResponse(index)
         raise HTTPException(status_code=404)
+
+
+def safe_static_file(base_dir: Path, relative_path: str) -> Path | None:
+    candidate = (base_dir / relative_path.lstrip("/")).resolve()
+    try:
+        candidate.relative_to(base_dir.resolve())
+    except ValueError:
+        return None
+    if candidate.exists() and candidate.is_file():
+        return candidate
+    return None

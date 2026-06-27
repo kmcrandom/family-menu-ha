@@ -171,7 +171,7 @@ export class SettingsComponent {
   }
 
   exportUrl(): string {
-    return '/api/v1/export';
+    return this.api.apiUrl('export');
   }
 
   selectImportFile(event: Event): void {
