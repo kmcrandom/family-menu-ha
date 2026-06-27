@@ -1,0 +1,54 @@
+name: Publish Home Assistant Add-on
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-aarch64:
+    name: Publish aarch64 image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read add-on version
+        id: addon
+        run: |
+          version="$(awk -F'"' '/^version:/ {print $2}' family-menu/config.yaml)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v7.2.0
+        with:
+          context: ./family-menu
+          platforms: linux/arm64
+          push: true
+          build-args: |
+            BUILD_ARCH=aarch64
+            BUILD_VERSION=${{ steps.addon.outputs.version }}
+          tags: |
+            ghcr.io/kmcrandom/family-menu-ha:${{ steps.addon.outputs.version }}
+            ghcr.io/kmcrandom/family-menu-ha:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/kmcrandom/family-menu-ha
+            org.opencontainers.image.description=Local-first weekly dinner planning, grocery, and prep app

@@ -14,11 +14,15 @@ data/starter-meal-catalog.json
 data/local-*.json
 data/private-*.json
 data/*export*.json
+family-menu/data/starter-meal-catalog.json
+family-menu/data/local-*.json
+family-menu/data/private-*.json
+family-menu/data/*export*.json
 exports/
 
-frontend/node_modules/
-frontend/.angular/
-frontend/dist/
+family-menu/frontend/node_modules/
+family-menu/frontend/.angular/
+family-menu/frontend/dist/
 
-family_menu/src/family_menu/static/*
-!family_menu/src/family_menu/static/.gitkeep
+family-menu/src/family_menu/static/*
+!family-menu/src/family_menu/static/.gitkeep

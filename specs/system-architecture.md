@@ -8,6 +8,7 @@ Family Menu has four initial layers:
 2. FastAPI application for meal catalog, weekly plans, history, and recommendation APIs.
 3. SQLite database for durable local storage.
 4. Import/export and seed data files for backup, migration, and generic starter meals.
+5. Home Assistant add-on packaging for local-network and ingress deployment.
 
 ```mermaid
 flowchart LR
@@ -15,7 +16,7 @@ flowchart LR
   API --> DB["SQLite"]
   API --> REC["Recommendation Service"]
   API --> SEED["Generic Seed / Private Import Export"]
-  API --> HA["Future Home Assistant Add-on Packaging"]
+  API --> HA["Home Assistant Add-on Packaging"]
 ```
 
 ## Frontend Architecture
@@ -46,7 +47,10 @@ flowchart LR
 - Export/import should be available so meal data is not trapped in the app.
 - The default local database path is repo-local for development, but database files must be ignored by git.
 - Private seed files and exports must be ignored by git unless intentionally sanitized and renamed as examples.
-- A future Home Assistant add-on can wrap the same app with Home Assistant-compatible packaging and ingress.
+- A Home Assistant add-on wraps the same app with Home Assistant-compatible packaging and ingress.
+- In add-on deployments, persistent data lives under `/data`, with `/data/family-menu.sqlite` as the default SQLite path.
+- In add-on deployments, runtime options can be read from `/data/options.json`, while environment variables remain the highest-precedence override for development and tests.
+- The Angular frontend is built into static assets during the add-on image build and served by FastAPI from the package static directory.
 
 ## Privacy Strategy
 
@@ -84,4 +88,4 @@ Configurable values:
 5. Meal Catalog screen.
 6. Grocery and Prep screen.
 7. History and Settings screens.
-8. Home Assistant-compatible packaging.
+8. Home Assistant add-on packaging and publish workflow.

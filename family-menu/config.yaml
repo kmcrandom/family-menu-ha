@@ -1,0 +1,39 @@
+---
+name: Family Menu
+version: "0.1.0"
+slug: family_menu
+description: Local-first weekly dinner planning, grocery, and prep app
+url: https://github.com/kmcrandom/family-menu-ha
+image: ghcr.io/kmcrandom/family-menu-ha
+arch:
+  - aarch64
+startup: application
+boot: auto
+init: false
+ingress: true
+ingress_port: 8097
+panel_title: Family Menu
+panel_icon: mdi:food-variant
+stage: experimental
+ports:
+  8097/tcp: null
+ports_description:
+  8097/tcp: Family Menu web app and API
+options:
+  database:
+    path: /data/family-menu.sqlite
+  seed:
+    path: /app/data/generic-starter-meal-catalog.example.json
+    auto_seed: true
+  server:
+    host: 0.0.0.0
+    port: 8097
+schema:
+  database:
+    path: str
+  seed:
+    path: str
+    auto_seed: bool
+  server:
+    host: str
+    port: int

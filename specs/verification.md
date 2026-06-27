@@ -20,6 +20,19 @@
 - Validate seed import is idempotent.
 - Validate private database files and local seed catalogs are ignored by git.
 
+## Home Assistant Add-on Verification
+
+- Validate `repository.yaml` and `family-menu/config.yaml` are present and contain generic install metadata.
+- Build the add-on image locally for `aarch64` using the Home Assistant base image build args.
+- Confirm the image starts through `family-menu/run.sh`.
+- Confirm `GET /health` returns `ok` inside the container.
+- Confirm the Angular UI is served from the container root path.
+- Confirm `/data/options.json` can set database path, seed path, host, port, and auto-seed behavior.
+- Confirm environment variables override `/data/options.json`.
+- Confirm the SQLite database is created under `/data` by default and is not included in git.
+- Confirm the add-on build context does not include private databases, private seed catalogs, exports, caches, or `node_modules`.
+- Confirm CI runs backend tests, builds the Angular frontend, and validates the add-on image build without publishing.
+
 ## Recommendation Verification
 
 - High-likability meals appear more often over repeated simulated weeks than low-likability meals.

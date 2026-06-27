@@ -13,7 +13,7 @@ from family_menu.config import Settings
 @pytest.fixture()
 def client(tmp_path: Path) -> TestClient:
     db_path = tmp_path / "family-menu.db"
-    seed_path = Path(__file__).parents[1] / "data" / "generic-starter-meal-catalog.example.json"
+    seed_path = Path(__file__).parents[1] / "family-menu" / "data" / "generic-starter-meal-catalog.example.json"
     static_dir = tmp_path / "static"
     settings = Settings(db_path=db_path, seed_path=seed_path, static_dir=static_dir)
     app = create_app(settings=settings)
