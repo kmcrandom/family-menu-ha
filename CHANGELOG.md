@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 - 2026-06-27
+
+- Add a Home Assistant add-on changelog inside the add-on folder.
+- Add release validation so the add-on config version must have a matching changelog entry.
+- Open existing Meal Catalog meals read-only by default and require Edit before making changes.
+- Add Save and Cancel edit-mode controls for Meal Catalog meal details.
+- Keep Meal Catalog variation and archive actions disabled until edit mode is active.
+
 ## 0.1.4 - 2026-06-27
 
 - Move Meal Catalog label filtering into the search bar so phone layouts no longer cut off label chips.
