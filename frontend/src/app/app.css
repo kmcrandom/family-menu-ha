@@ -1,0 +1,141 @@
+ :host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  align-items: center;
+  background: rgba(16, 20, 20, 0.94);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 22px;
+  justify-content: space-between;
+  padding: 10px clamp(16px, 3vw, 36px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(16px);
+  height: auto;
+  min-width: 0;
+  min-height: 56px;
+}
+
+.brand {
+  align-items: center;
+  color: var(--text);
+  display: inline-flex;
+  gap: 12px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--primary);
+  border-radius: 8px;
+  color: #002020;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.brand small {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 1px;
+}
+
+.nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.nav a {
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  padding: 9px 11px;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.nav a.active {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+.main {
+  padding: 18px clamp(14px, 3vw, 36px) 32px;
+  overflow-x: hidden;
+}
+
+@media (max-width: 780px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .nav {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .nav a {
+    padding: 8px 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    gap: 9px;
+    padding: 8px 12px;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+    gap: 4px;
+    justify-content: flex-start;
+    margin: 0 -12px;
+    overflow-x: auto;
+    padding: 0 12px 3px;
+    scrollbar-width: thin;
+  }
+
+  .nav a {
+    flex: 0 0 auto;
+    font-size: 13px;
+    padding: 7px 8px;
+    white-space: nowrap;
+  }
+
+  .main {
+    padding-top: 14px;
+  }
+}

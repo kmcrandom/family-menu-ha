@@ -1,0 +1,75 @@
+# Family Config And Settings Screen
+
+## Purpose
+
+The Family Config and Settings screen stores household composition, dietary preferences, meal-planning defaults, import/export controls, and recommendation tuning that should not clutter the weekly workflow.
+
+## Primary Content
+
+- Household name.
+- Household members:
+  - Display label or first name.
+  - Servings needed for dinner.
+  - Leftover lunch servings needed.
+  - Dietary profile.
+  - Optional preference tags such as simple-servings-friendly.
+- Dietary profiles:
+  - Omnivore.
+  - Vegetarian.
+  - Vegan.
+  - Pescatarian.
+  - No pork.
+  - No beef.
+  - Custom profile label and excluded ingredients/tags.
+- Mixed-diet recommendation mode:
+  - Separate variations: allow one shared-base meal to select different compatible variations for different diet groups.
+  - Common compatible only: suggest only meals and variation options that satisfy every active dietary profile in the household.
+- Week start day.
+- Grocery shopping day.
+- Default number of dinners per week.
+- Default dinner servings.
+- Default leftover lunch servings.
+- Maximum same meal per week.
+- Soft repeat gap.
+- Avoid consecutive leftover styles.
+- Variation-option recency and frequency weighting.
+- Recommendation weight settings.
+- Import/export controls.
+
+## Primary Actions
+
+- Edit household defaults.
+- Add, edit, or remove household members.
+- Assign dietary profiles to household members.
+- Choose mixed-diet recommendation mode.
+- Reset recommendation weights to defaults.
+- Export app data.
+- Import app data.
+
+## Requirements
+
+- Defaults should apply to newly generated plans without rewriting old plans.
+- Household member and diet changes should apply to newly generated plans without rewriting old plans or history.
+- Planning-default fields such as week start, shopping day, dinner count, servings, repeat gap, and weighting values should use compact short/medium field widths on desktop and tablet.
+- Household member rows should group display name, servings, leftover servings, and dietary profile controls into compact rows on desktop/tablet.
+- Dietary profile rows should keep profile name, type, included tags, excluded tags, and actions scannable without excessive vertical padding.
+- Advanced recommendation tuning should be dense but readable, with related numeric fields sharing rows where possible.
+- Separate-variation mode should preserve independent variation dimensions for diet groups where the meal supports them.
+- Common-compatible mode should filter suggestions to meals and options that satisfy all active dietary profiles.
+- The UI should avoid assuming household relationships or a fixed number of eaters.
+- Dangerous actions such as full import overwrite should require confirmation.
+- Recommendation weights may start as advanced settings and can be hidden until needed.
+- Variation-option weighting may start as an advanced setting; default behavior should be sensible without tuning.
+- The screen should avoid showing local filesystem paths during normal use.
+
+## Acceptance Criteria
+
+- A user can configure the number of people they cook for without editing source files.
+- A user can add a pescatarian, vegetarian, vegan, omnivore, or custom dietary profile without making the whole app specific to that household.
+- A user can choose separate-variation mode or common-compatible-only mode for mixed-diet planning.
+- A user can change the default dinner count for future weeks.
+- A user can change leftover lunch servings for future plans.
+- A user can export local data.
+- A user can import data without silently overwriting user-edited meals unless explicitly confirmed.
+- The settings screen does not expose local database or seed catalog paths in the normal user interface.
+- The desktop and tablet settings layout avoids long single-column forms for small values, while phone-sized screens collapse controls into readable stacked groups.

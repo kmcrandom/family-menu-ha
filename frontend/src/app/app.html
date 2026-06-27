@@ -1,0 +1,29 @@
+<div class="app-shell">
+  <mat-toolbar class="topbar">
+    <a class="brand" routerLink="/weekly-plan" aria-label="Family Menu home">
+      <span class="brand-mark">FM</span>
+      <span>
+        <strong>Family Menu</strong>
+        <small>Weekly dinner planning</small>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      @for (item of navItems; track item.path) {
+        <a
+          mat-button
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/weekly-plan' }"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </mat-toolbar>
+
+  <main class="main">
+    <router-outlet />
+  </main>
+</div>

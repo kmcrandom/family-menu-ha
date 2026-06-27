@@ -1,0 +1,138 @@
+<section class="page">
+  <div class="page-heading">
+    <div>
+      <h1>Family Config</h1>
+      <p>Household defaults, dietary profiles, and recommendation behavior.</p>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="notice error">{{ error }}</div>
+  }
+  @if (saved) {
+    <div class="notice success">Settings saved.</div>
+  }
+
+  <div class="settings-defaults">
+    <form class="panel form-grid" [formGroup]="form" (ngSubmit)="save()">
+      <h2 class="wide">Planning Defaults</h2>
+      <mat-form-field class="large" appearance="outline"><mat-label>Household name</mat-label><input matInput formControlName="household_name" /></mat-form-field>
+      <mat-form-field class="large" appearance="outline">
+        <mat-label>Mixed-diet mode</mat-label>
+        <mat-select formControlName="mixed_diet_mode">
+          <mat-option value="separate_variations">Separate compatible variations</mat-option>
+          <mat-option value="common_compatible_only">Only meals compatible with everyone</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="medium" appearance="outline"><mat-label>Week start</mat-label><input matInput formControlName="week_start_day" /></mat-form-field>
+      <mat-form-field class="medium" appearance="outline"><mat-label>Shopping day</mat-label><input matInput formControlName="shopping_day" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Dinners/week</mat-label><input matInput type="number" min="1" max="14" formControlName="default_week_size" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Dinner servings</mat-label><input matInput type="number" min="1" formControlName="default_dinner_servings" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Lunch leftovers</mat-label><input matInput type="number" min="0" formControlName="default_leftover_lunch_servings" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Max meal/week</mat-label><input matInput type="number" min="1" formControlName="max_same_meal_per_week" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Repeat gap</mat-label><input matInput type="number" min="0" formControlName="soft_repeat_gap_days" /></mat-form-field>
+      <mat-checkbox class="wide" formControlName="avoid_consecutive_leftover_styles">Avoid consecutive leftover styles</mat-checkbox>
+      <mat-form-field class="short" appearance="outline"><mat-label>Recency wt</mat-label><input matInput type="number" step="0.05" formControlName="variation_recency_weight" /></mat-form-field>
+      <mat-form-field class="short" appearance="outline"><mat-label>Frequency wt</mat-label><input matInput type="number" step="0.05" formControlName="variation_frequency_weight" /></mat-form-field>
+
+      <div class="form-actions wide">
+        <button mat-flat-button color="primary" type="submit"><mat-icon>save</mat-icon>Save Settings</button>
+        <a mat-stroked-button [href]="exportUrl()" target="_blank"><mat-icon>download</mat-icon>Export JSON</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="two-column">
+    <mat-card class="panel">
+      <div class="section-title">
+        <h2>Household Members</h2>
+      </div>
+      <div class="member-list">
+        @for (member of household?.members || []; track member.id) {
+          <article class="mini-editor">
+            <mat-form-field class="medium" appearance="outline">
+              <mat-label>Name</mat-label>
+              <input matInput [(ngModel)]="member.display_name" [ngModelOptions]="{ standalone: true }" />
+            </mat-form-field>
+            <mat-form-field class="short" appearance="outline">
+              <mat-label>Dinner servings</mat-label>
+              <input matInput type="number" min="0" step="0.5" [(ngModel)]="member.dinner_servings" [ngModelOptions]="{ standalone: true }" />
+            </mat-form-field>
+            <mat-form-field class="short" appearance="outline">
+              <mat-label>Lunch leftovers</mat-label>
+              <input matInput type="number" min="0" step="0.5" [(ngModel)]="member.leftover_lunch_servings" [ngModelOptions]="{ standalone: true }" />
+            </mat-form-field>
+            <mat-form-field class="medium" appearance="outline">
+              <mat-label>Dietary profile</mat-label>
+              <mat-select
+                [ngModel]="member.dietary_profile_ids[0] || ''"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="setMemberProfile(member, $event)"
+              >
+                @for (profile of household?.dietary_profiles || []; track profile.id) {
+                  <mat-option [value]="profile.id">{{ profile.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <div class="form-actions wide">
+              <button mat-flat-button class="accent-action" type="button" (click)="saveMember(member)">Save Member</button>
+              <button mat-stroked-button type="button" (click)="member.status = member.status === 'active' ? 'archived' : 'active'; saveMember(member)">
+                {{ member.status === 'active' ? 'Archive' : 'Restore' }}
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+      <div class="add-option">
+        <mat-form-field appearance="outline"><mat-label>Add household member</mat-label><input matInput [(ngModel)]="newMemberName" [ngModelOptions]="{ standalone: true }" /></mat-form-field>
+        <button mat-flat-button color="primary" type="button" (click)="addMember()"><mat-icon>add</mat-icon>Add</button>
+      </div>
+    </mat-card>
+
+    <mat-card class="panel">
+      <div class="section-title">
+        <h2>Dietary Profiles</h2>
+      </div>
+      <div class="member-list">
+        @for (profile of household?.dietary_profiles || []; track profile.id) {
+          <article class="mini-editor">
+            <mat-form-field class="medium" appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="profile.name" [ngModelOptions]="{ standalone: true }" /></mat-form-field>
+            <mat-form-field class="medium" appearance="outline">
+              <mat-label>Type</mat-label>
+              <mat-select [(ngModel)]="profile.type" [ngModelOptions]="{ standalone: true }">
+                <mat-option value="omnivore">Omnivore</mat-option>
+                <mat-option value="vegetarian">Vegetarian</mat-option>
+                <mat-option value="vegan">Vegan</mat-option>
+                <mat-option value="pescatarian">Pescatarian</mat-option>
+                <mat-option value="no_pork">No pork</mat-option>
+                <mat-option value="no_beef">No beef</mat-option>
+                <mat-option value="custom">Custom</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="large" appearance="outline"><mat-label>Excluded tags</mat-label><input matInput #excludedTags [value]="tagsText(profile.excluded_tags)" /></mat-form-field>
+            <div class="form-actions wide">
+              <button mat-flat-button class="accent-action" type="button" (click)="saveProfile(profile, excludedTags.value)">Save Profile</button>
+            </div>
+          </article>
+        }
+      </div>
+      <div class="add-profile">
+        <mat-form-field appearance="outline"><mat-label>Profile name</mat-label><input matInput [(ngModel)]="newProfileName" [ngModelOptions]="{ standalone: true }" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Type</mat-label>
+          <mat-select [(ngModel)]="newProfileType" [ngModelOptions]="{ standalone: true }">
+            <mat-option value="omnivore">Omnivore</mat-option>
+            <mat-option value="vegetarian">Vegetarian</mat-option>
+            <mat-option value="vegan">Vegan</mat-option>
+            <mat-option value="pescatarian">Pescatarian</mat-option>
+            <mat-option value="no_pork">No pork</mat-option>
+            <mat-option value="no_beef">No beef</mat-option>
+            <mat-option value="custom">Custom</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Excluded tags</mat-label><input matInput [(ngModel)]="newProfileExcludedTags" [ngModelOptions]="{ standalone: true }" /></mat-form-field>
+        <button mat-flat-button color="primary" type="button" (click)="addProfile()"><mat-icon>add</mat-icon>Add</button>
+      </div>
+    </mat-card>
+  </div>
+</section>

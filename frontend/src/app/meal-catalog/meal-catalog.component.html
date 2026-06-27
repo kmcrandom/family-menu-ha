@@ -1,0 +1,231 @@
+<section class="page">
+  <div class="page-heading">
+    <div>
+      <h1>Meal Catalog</h1>
+      <p>Edit meals, likability, and independent variation options.</p>
+    </div>
+    <mat-checkbox [(ngModel)]="showArchived">
+      Show archived
+    </mat-checkbox>
+  </div>
+
+  @if (error) {
+    <div class="notice error">{{ error }}</div>
+  }
+
+  <div class="catalog-layout">
+    <mat-card class="panel catalog-list">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput [(ngModel)]="query" placeholder="Meal, ingredient, protein, sauce" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-nav-list class="list">
+        @for (meal of filteredMeals; track meal.id) {
+          <button
+            mat-button
+            type="button"
+            class="list-row"
+            [class.active]="selected?.id === meal.id"
+            [class.archived]="meal.status === 'archived'"
+            (click)="selectMeal(meal)"
+          >
+            <strong>{{ meal.name }}</strong>
+          </button>
+        }
+      </mat-nav-list>
+
+      @if (availableTags.length) {
+        <div class="tag-filter" aria-label="Meal label filters">
+          <mat-chip-set>
+            @for (tag of availableTags; track tag) {
+              <mat-chip-option
+                [selected]="selectedTag === tag"
+                (click)="selectTag(tag)"
+              >
+                {{ tag }}
+              </mat-chip-option>
+            }
+          </mat-chip-set>
+          @if (selectedTag) {
+            <button mat-button type="button" (click)="clearTagFilter()">
+              <mat-icon>close</mat-icon>
+              Clear label
+            </button>
+          }
+        </div>
+      }
+    </mat-card>
+
+    @if (selected) {
+      <mat-card class="panel editor">
+        <div class="section-title">
+          <div>
+            <h2>{{ selected.name }}</h2>
+            <p>{{ selected.variation_dimensions.length }} variation dimensions</p>
+          </div>
+          <div class="actions">
+            @if (selected.source_url) {
+              <a mat-icon-button [href]="selected.source_url" target="_blank" rel="noopener noreferrer" [matTooltip]="sourceLabel(selected)" aria-label="Open meal source">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            }
+            <button mat-stroked-button type="button" (click)="archiveMeal()">
+              <mat-icon>{{ selected.status === 'active' ? 'archive' : 'unarchive' }}</mat-icon>
+              {{ selected.status === 'active' ? 'Archive' : 'Restore' }}
+            </button>
+          </div>
+        </div>
+
+        <form class="form-grid" [formGroup]="mealForm" (ngSubmit)="saveMeal()">
+          <mat-form-field class="large" appearance="outline"><mat-label>Name</mat-label><input matInput formControlName="name" /></mat-form-field>
+          <mat-form-field class="short" appearance="outline"><mat-label>Likability</mat-label><input matInput type="number" min="0" max="100" formControlName="likability" /></mat-form-field>
+          <mat-form-field class="short" appearance="outline"><mat-label>Active prep</mat-label><input matInput type="number" min="0" formControlName="active_prep_minutes" /></mat-form-field>
+          <mat-form-field class="short" appearance="outline"><mat-label>Cook time</mat-label><input matInput type="number" min="0" formControlName="cook_minutes" /></mat-form-field>
+          <mat-form-field class="short" appearance="outline"><mat-label>Make-ahead</mat-label><input matInput type="number" min="0" max="100" formControlName="make_ahead_score" /></mat-form-field>
+          <mat-form-field class="short" appearance="outline"><mat-label>Leftovers</mat-label><input matInput type="number" min="0" max="100" formControlName="leftover_quality" /></mat-form-field>
+          <mat-form-field class="medium" appearance="outline"><mat-label>Leftover style</mat-label><input matInput formControlName="leftover_style" /></mat-form-field>
+          <mat-form-field class="medium" appearance="outline"><mat-label>Source name</mat-label><input matInput formControlName="source_name" /></mat-form-field>
+          <div class="large source-url-row">
+            <mat-form-field appearance="outline"><mat-label>Source URL</mat-label><input matInput formControlName="source_url" /></mat-form-field>
+            @if (sourceUrlValue()) {
+              <a
+                mat-icon-button
+                [href]="sourceUrlValue()"
+                target="_blank"
+                rel="noopener noreferrer"
+                matTooltip="Open source URL"
+                aria-label="Open source URL"
+              >
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            }
+          </div>
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Labels</mat-label>
+            <textarea matInput rows="2" formControlName="tags_text"></textarea>
+            <mat-hint>Separate labels with commas or new lines. Labels filter the catalog.</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Shared grocery ingredients</mat-label>
+            <textarea matInput rows="4" formControlName="shared_ingredients_text"></textarea>
+            <mat-hint>One per line. These appear whenever this meal is planned.</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Sunday prep tasks</mat-label>
+            <textarea matInput rows="4" formControlName="prep_ahead_text"></textarea>
+            <mat-hint>One per line. These appear in Sunday Prep whenever this meal is planned.</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="wide" appearance="outline">
+            <mat-label>Cooking instructions</mat-label>
+            <textarea matInput rows="5" formControlName="instructions_text"></textarea>
+            <mat-hint>One short step per line. These appear in the Weekly Plan instructions popup.</mat-hint>
+          </mat-form-field>
+          <mat-form-field class="wide" appearance="outline"><mat-label>Notes</mat-label><textarea matInput rows="2" formControlName="notes"></textarea></mat-form-field>
+          <div class="form-actions">
+            <button mat-flat-button class="accent-action" type="submit" [disabled]="saving">
+              <mat-icon>save</mat-icon>
+              Save Meal
+            </button>
+          </div>
+        </form>
+
+        <div class="dimension-stack">
+          @for (dimension of selected.variation_dimensions; track dimension.id) {
+            <mat-card class="dimension variation-tone" [ngClass]="variationToneClass(dimension)">
+              <div class="dimension-head">
+                <div>
+                  <h3>{{ dimension.name }}</h3>
+                  <p>{{ dimension.key }} · {{ dimension.required ? 'required' : 'optional' }}</p>
+                </div>
+                <mat-checkbox
+                  class="small"
+                  [ngModel]="dimension.required"
+                  (ngModelChange)="updateDimension(dimension, { required: $event })"
+                >
+                  Required
+                </mat-checkbox>
+              </div>
+
+              <div class="option-list">
+                @for (option of dimension.options; track option.id) {
+                  <div class="option-editor variation-tone" [ngClass]="variationToneClass(dimension)" [class.archived]="option.status === 'archived'">
+                    <div class="option-row">
+                      <mat-form-field class="option-name medium" appearance="outline">
+                        <mat-label>Option</mat-label>
+                        <input
+                          matInput
+                          class="option-name"
+                          [ngModel]="option.name"
+                          (change)="updateOption(option, { name: $any($event.target).value })"
+                        />
+                      </mat-form-field>
+                      <mat-form-field class="short" appearance="outline">
+                        <mat-label>Like</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          min="0"
+                          max="100"
+                          [ngModel]="option.likability"
+                          (change)="updateOption(option, { likability: +$any($event.target).value })"
+                        />
+                      </mat-form-field>
+                      <button mat-stroked-button type="button" (click)="toggleOption(option)">
+                        {{ option.status === 'active' ? 'Archive' : 'Restore' }}
+                      </button>
+                    </div>
+                    <div class="option-detail">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Grocery additions</mat-label>
+                        <textarea
+                          matInput
+                          rows="3"
+                          [ngModel]="ingredientsToText(option.ingredient_additions)"
+                          (change)="updateOptionLines(option, 'ingredient_additions', $any($event.target).value)"
+                        ></textarea>
+                        <mat-hint>One per line. Added when this option is selected.</mat-hint>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Grocery omissions</mat-label>
+                        <textarea
+                          matInput
+                          rows="3"
+                          [ngModel]="linesToText(option.ingredient_omissions)"
+                          (change)="updateOptionLines(option, 'ingredient_omissions', $any($event.target).value)"
+                        ></textarea>
+                        <mat-hint>One per line. Removes matching shared ingredients when selected.</mat-hint>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Option prep tasks</mat-label>
+                        <textarea
+                          matInput
+                          rows="3"
+                          [ngModel]="linesToText(option.prep_ahead)"
+                          (change)="updateOptionLines(option, 'prep_ahead', $any($event.target).value)"
+                        ></textarea>
+                        <mat-hint>One per line. Added to Sunday Prep when selected.</mat-hint>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="add-option">
+                <mat-form-field appearance="outline">
+                  <mat-label>Add option</mat-label>
+                  <input matInput [(ngModel)]="newOptionNames[dimension.id]" />
+                </mat-form-field>
+                <button mat-flat-button class="accent-action" type="button" (click)="addOption(dimension)">
+                  <mat-icon>add</mat-icon>
+                  Add
+                </button>
+              </div>
+            </mat-card>
+          }
+        </div>
+      </mat-card>
+    }
+  </div>
+</section>

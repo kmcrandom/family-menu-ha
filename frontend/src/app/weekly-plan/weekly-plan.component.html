@@ -1,0 +1,216 @@
+<section class="page">
+  <div class="page-heading">
+    <div>
+      <h1>Weekly Plan</h1>
+      <p>Five dinners, shared bases, independent variation choices.</p>
+    </div>
+    <div class="actions">
+      <button mat-flat-button color="primary" type="button" (click)="generate()" [disabled]="saving || !plan || isFullWeekVacation()">
+        <mat-icon>auto_awesome</mat-icon>
+        {{ plan?.planned_meals?.length ? 'Regenerate Unlocked' : 'Generate Week' }}
+      </button>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="notice error">{{ error }}</div>
+  }
+
+  @if (loading) {
+    <mat-card class="panel empty"><mat-spinner diameter="28" /> Loading this week...</mat-card>
+  } @else if (plan) {
+    <div class="planner-layout">
+      <div class="meal-stack">
+        <div class="week-toolbar">
+          <div class="week-meta">
+            <span>Week of {{ plan.week_start_date | date: 'MMM d' }}</span>
+            <span>Shop {{ plan.shopping_date | date: 'EEE, MMM d' }}</span>
+            <span>{{ plan.planned_meals.length || 0 }} / {{ plan.target_dinner_count }} dinners</span>
+          </div>
+          <div class="week-nav" aria-label="Week navigation">
+            <button mat-stroked-button type="button" (click)="previousWeek()" [disabled]="loading || saving">
+              <mat-icon>chevron_left</mat-icon>
+              Previous
+            </button>
+            <button mat-flat-button type="button" (click)="currentWeek()" [disabled]="loading || saving || isCurrentWeek()">Current Week</button>
+            <button mat-stroked-button type="button" (click)="nextWeek()" [disabled]="loading || saving">
+              Next
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="vacation-toolbar">
+          <button
+            mat-flat-button
+            class="accent-action"
+            type="button"
+            (click)="toggleVacationWeek()"
+            [disabled]="saving"
+          >
+            <mat-icon>{{ isFullWeekVacation() ? 'event_available' : 'flight_takeoff' }}</mat-icon>
+            {{ isFullWeekVacation() ? 'End Vacation Week' : 'Vacation Week' }}
+          </button>
+          <div class="vacation-days" aria-label="Vacation days">
+            @for (date of visibleDinnerDates(); track date) {
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="toggleVacationDate(date)"
+                [class.blocked]="isDateBlocked(date)"
+                [disabled]="saving || isFullWeekVacation()"
+              >
+                {{ date | date: 'EEE MMM d' }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (isFullWeekVacation()) {
+          <mat-card class="panel empty">
+            <h2>Vacation week</h2>
+            <p>No dinners will be generated for this week.</p>
+          </mat-card>
+        } @else if (!plan.planned_meals.length) {
+          <mat-card class="panel empty">
+            <h2>No meals planned yet</h2>
+            <p>Generate suggestions to fill the week from your catalog.</p>
+          </mat-card>
+        }
+
+        @if (!isFullWeekVacation() && plan.vacation_blocks.length) {
+          <mat-chip-set class="blocked-dates" aria-label="Blocked vacation dates">
+            @for (date of visibleDinnerDates(); track date) {
+              @if (isDateBlocked(date)) {
+                <mat-chip>{{ date | date: 'EEE, MMM d' }} vacation</mat-chip>
+              }
+            }
+          </mat-chip-set>
+        }
+
+        @for (item of plan.planned_meals; track item.id; let first = $first; let last = $last) {
+          <mat-card class="meal-row" [class.done]="item.state === 'eaten'" [class.skipped]="item.state === 'skipped'">
+            <div class="row-top">
+              <div class="date-box">
+                <strong>{{ item.planned_date | date: 'EEE' }}</strong>
+                <span>{{ item.planned_date | date: 'MMM d' }}</span>
+              </div>
+              <div class="meal-title">
+                <mat-form-field class="meal-select-field" appearance="outline">
+                  <mat-label>Meal</mat-label>
+                  <mat-select
+                  class="meal-select"
+                  [ngModel]="item.meal_id"
+                  (ngModelChange)="replaceMeal(item, $event)"
+                  [disabled]="item.locked || saving"
+                  aria-label="Replace meal"
+                >
+                  @for (meal of meals; track meal.id) {
+                    <mat-option [value]="meal.id">{{ meal.name }}</mat-option>
+                  }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="row-actions">
+                <button mat-icon-button type="button" (click)="move(item, -1)" [disabled]="first || saving" matTooltip="Move up"><mat-icon>arrow_upward</mat-icon></button>
+                <button mat-icon-button type="button" (click)="move(item, 1)" [disabled]="last || saving" matTooltip="Move down"><mat-icon>arrow_downward</mat-icon></button>
+                <button mat-icon-button type="button" (click)="showInstructions(item)" matTooltip="Cooking instructions" aria-label="Show cooking instructions">
+                  <mat-icon>menu_book</mat-icon>
+                </button>
+                @if (item.meal.source_url) {
+                  <a mat-icon-button [href]="item.meal.source_url" target="_blank" rel="noopener noreferrer" matTooltip="Open meal source" aria-label="Open meal source">
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                }
+                <button mat-stroked-button type="button" (click)="toggleMealLock(item)">
+                  <mat-icon>{{ item.locked ? 'lock_open' : 'lock' }}</mat-icon>
+                  {{ item.locked ? 'Unlock' : 'Lock' }}
+                </button>
+                <button mat-stroked-button type="button" (click)="toggleVacationDate(item.planned_date)" [disabled]="saving">
+                  <mat-icon>flight_takeoff</mat-icon>
+                  Vacation
+                </button>
+              </div>
+            </div>
+
+            <div class="variation-grid">
+              @for (dimension of item.meal.variation_dimensions; track dimension.id) {
+                <div class="field compact variation-tone" [ngClass]="variationToneClass(dimension)">
+                  <span>{{ dimension.name }}</span>
+                  <mat-form-field appearance="outline">
+                    <mat-select
+                      [ngModel]="item.variation_selections[dimension.id]"
+                      (ngModelChange)="setVariation(item, dimension.id, $event)"
+                      [disabled]="item.variation_locks[dimension.id] || saving"
+                    >
+                      @for (option of dimension.options; track option.id) {
+                        <mat-option [value]="option.id">{{ option.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <button
+                    mat-icon-button
+                    class="variation-lock"
+                    type="button"
+                    (click)="toggleVariationLock(item, dimension.id)"
+                    [class.locked]="item.variation_locks[dimension.id]"
+                    [matTooltip]="item.variation_locks[dimension.id] ? 'Unlock variation' : 'Lock variation'"
+                    [attr.aria-label]="item.variation_locks[dimension.id] ? 'Unlock variation' : 'Lock variation'"
+                  >
+                    <mat-icon>{{ item.variation_locks[dimension.id] ? 'lock' : 'lock_open' }}</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <div class="row-footer">
+              <div class="actions">
+                <button mat-button type="button" (click)="skip(item)" [disabled]="item.state === 'skipped' || saving">Skip</button>
+                <button mat-flat-button class="accent-action" type="button" (click)="markEaten(item)" [disabled]="item.state === 'eaten' || saving">Mark Eaten</button>
+              </div>
+            </div>
+          </mat-card>
+        }
+      </div>
+
+      <aside class="side-rail">
+        <mat-card class="panel">
+          <h2>Sunday Prep</h2>
+          @if (grocery?.prep_items?.length) {
+            <ul class="check-list">
+              @for (item of grocery?.prep_items?.slice(0, 8); track item.label) {
+                <li>
+                  <mat-checkbox
+                    type="checkbox"
+                    [checked]="item.checked"
+                    (change)="toggleChecklist('prep', item, $event)"
+                  />
+                  <span>
+                    <strong>{{ item.label }}</strong>
+                    @if (item.amount_display) {
+                      <small>{{ item.amount_display }}</small>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="muted">Generate a plan to see prep work.</p>
+          }
+        </mat-card>
+
+        <mat-card class="panel">
+          <h2>Grocery Highlights</h2>
+          @if (grocery?.grocery_items?.length) {
+            <mat-chip-set class="grocery-groups">
+              @for (item of grocery?.grocery_items?.slice(0, 14); track item.label) {
+                <mat-chip>{{ item.amount_display ? item.amount_display + ' ' : '' }}{{ item.label }}</mat-chip>
+              }
+            </mat-chip-set>
+          } @else {
+            <p class="muted">Selected variations will shape the grocery list.</p>
+          }
+        </mat-card>
+      </aside>
+    </div>
+  }
+</section>

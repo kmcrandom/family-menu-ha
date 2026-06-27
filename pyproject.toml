@@ -1,0 +1,30 @@
+[project]
+name = "family-menu"
+version = "0.1.0"
+description = "Local-first weekly dinner planning app for a mixed-diet household."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.111.0",
+  "pydantic>=2.7.0",
+  "uvicorn[standard]>=0.30.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx>=0.27.0",
+  "pytest>=8.2.0",
+]
+
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["family_menu/src"]
+
+[tool.setuptools.package-data]
+family_menu = ["static/*", "static/**/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["family_menu/src"]
+testpaths = ["tests"]

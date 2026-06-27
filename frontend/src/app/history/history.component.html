@@ -1,0 +1,54 @@
+<section class="page">
+  <div class="page-heading">
+    <div>
+      <h1>History</h1>
+      <p>Meal and option usage that teaches future suggestions.</p>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="notice error">{{ error }}</div>
+  }
+
+  <div class="two-column history-grid">
+    <mat-card class="panel">
+      <h2>Add Event</h2>
+      <div class="form-grid one event-add-grid add-event-form">
+        <mat-form-field class="large" appearance="outline">
+          <mat-label>Meal</mat-label>
+          <mat-select [(ngModel)]="selectedMealId">
+            @for (meal of meals; track meal.id) {
+              <mat-option [value]="meal.id">{{ meal.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="medium" appearance="outline">
+          <mat-label>Date</mat-label>
+          <input matInput type="date" [(ngModel)]="eatenDate" />
+        </mat-form-field>
+        <div class="form-actions medium">
+          <button mat-flat-button color="primary" type="button" (click)="addEvent()"><mat-icon>add</mat-icon>Add History</button>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="panel">
+      <h2>Recent Meals</h2>
+      @if (!events.length) {
+        <p class="muted">No meals marked eaten yet.</p>
+      }
+      <div class="event-list">
+        @for (event of events; track event.id) {
+          <article class="event-row">
+            <div>
+              <strong>{{ event.meal.name }}</strong>
+              <p>{{ selectedOptions(event) }}</p>
+              <small>{{ event.eaten_date | date: 'EEE, MMM d' }}</small>
+            </div>
+            <button mat-stroked-button type="button" (click)="deleteEvent(event)"><mat-icon>delete</mat-icon>Delete</button>
+          </article>
+        }
+      </div>
+    </mat-card>
+  </div>
+</section>

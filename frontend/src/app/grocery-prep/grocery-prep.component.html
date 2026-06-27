@@ -1,0 +1,88 @@
+<section class="page">
+  <div class="page-heading">
+    <div>
+      <h1>Grocery + Prep</h1>
+      <p>One Sunday list, shaped by the meals and variation options you picked.</p>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="notice error">{{ error }}</div>
+  }
+
+  @if (loading) {
+    <mat-card class="panel empty"><mat-spinner diameter="28" /> Loading grocery and prep...</mat-card>
+  } @else if (plan) {
+    <div class="week-toolbar">
+      <div class="week-meta">
+        <span>Week of {{ plan.week_start_date | date: 'MMM d' }}</span>
+        <span>Shop {{ plan.shopping_date | date: 'EEE, MMM d' }}</span>
+        <span>{{ plan.planned_meals.length || 0 }} / {{ plan.target_dinner_count }} dinners</span>
+      </div>
+      <div class="week-nav" aria-label="Week navigation">
+        <button mat-stroked-button type="button" (click)="previousWeek()" [disabled]="loading || saving">
+          <mat-icon>chevron_left</mat-icon>
+          Previous
+        </button>
+        <button mat-flat-button type="button" (click)="nextUpcomingWeek()" [disabled]="loading || saving || isNextUpcomingWeek()">Next Week</button>
+        <button mat-stroked-button type="button" (click)="nextWeek()" [disabled]="loading || saving">
+          Next
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (!loading && grocery) {
+    <div class="two-column">
+      <mat-card class="panel">
+        <h2>Grocery List</h2>
+        @for (group of grouped(grocery.grocery_items); track group[0]) {
+          <div class="grocery-section">
+            <h3>{{ group[0] }}</h3>
+            <ul class="source-list">
+              @for (item of group[1]; track item.label) {
+                <li>
+                  <mat-checkbox
+                    [checked]="item.checked"
+                    (change)="toggleItem('grocery', item, $event)"
+                  />
+                  <span>
+                    <strong>{{ item.label }}</strong>
+                    @if (item.amount_display) {
+                      <small>{{ item.amount_display }}</small>
+                    }
+                    <small>{{ item.source }}</small>
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </mat-card>
+
+      <mat-card class="panel">
+        <h2>Sunday Prep</h2>
+        <ul class="source-list">
+          @for (item of grocery.prep_items; track item.label) {
+            <li>
+              <mat-checkbox
+                [checked]="item.checked"
+                (change)="toggleItem('prep', item, $event)"
+              />
+              <span>
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.source }}</small>
+              </span>
+            </li>
+          }
+        </ul>
+      </mat-card>
+    </div>
+  } @else if (!loading && !error) {
+    <mat-card class="panel empty">
+      <h2>No grocery list yet</h2>
+      <p>Generate meals for this week from Weekly Plan to fill this list.</p>
+    </mat-card>
+  }
+</section>

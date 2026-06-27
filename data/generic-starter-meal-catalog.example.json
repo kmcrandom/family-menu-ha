@@ -1,0 +1,318 @@
+{
+  "version": 1,
+  "description": "Generic sample catalog. Real household catalogs belong in ignored local data.",
+  "meals": [
+    {
+      "id": "sample-build-your-own-bowl",
+      "name": "Build-Your-Own Bowl",
+      "likability": 82,
+      "active_prep_minutes": 20,
+      "cook_minutes": 25,
+      "make_ahead_score": 86,
+      "leftover_quality": 84,
+      "leftover_style": "bowl",
+      "tags": ["sample", "shared-base", "customizable"],
+      "diet_tags": ["configurable"],
+      "shared_ingredients": ["base ingredient", "vegetable mix", "sauce"],
+      "primary_proteins": ["default protein"],
+      "alternate_proteins": ["compatible protein"],
+      "prep_ahead": ["prepare base", "portion toppings"],
+      "instructions": [
+        "Prepare the shared base.",
+        "Prepare selected variation options separately as needed.",
+        "Serve components so each eater can assemble a compatible bowl."
+      ],
+      "simple_serving_variations": ["plain base with preferred topping"],
+      "variation_dimensions": [
+        {
+          "id": "sample-build-your-own-bowl-primary-protein",
+          "key": "variation_primary_protein",
+          "name": "Primary protein",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-build-your-own-bowl-primary-protein-default",
+              "name": "default protein",
+              "likability": 82,
+              "value": {"primary_protein": "default protein"},
+              "diet_tags": ["contains_meat"],
+              "ingredient_additions": ["default protein"],
+              "prep_ahead": ["portion default protein"],
+              "tags": ["sample"]
+            },
+            {
+              "id": "sample-build-your-own-bowl-primary-protein-compatible",
+              "name": "compatible protein",
+              "likability": 78,
+              "value": {"primary_protein": "compatible protein"},
+              "diet_tags": ["vegetarian", "pescatarian"],
+              "ingredient_additions": ["compatible protein"],
+              "prep_ahead": ["portion compatible protein"],
+              "tags": ["sample"]
+            }
+          ]
+        },
+        {
+          "id": "sample-build-your-own-bowl-sauce",
+          "key": "variation_sauce",
+          "name": "Sauce",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-build-your-own-bowl-sauce-default",
+              "name": "default sauce",
+              "likability": 80,
+              "value": {"sauce": "default sauce"},
+              "diet_tags": ["configurable"],
+              "ingredient_additions": ["default sauce"],
+              "tags": ["sample"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-one-pot-meal",
+      "name": "One-Pot Meal",
+      "likability": 78,
+      "active_prep_minutes": 15,
+      "cook_minutes": 35,
+      "make_ahead_score": 76,
+      "leftover_quality": 83,
+      "leftover_style": "mixed",
+      "tags": ["sample", "low-active-prep"],
+      "diet_tags": ["configurable"],
+      "shared_ingredients": ["main ingredient", "vegetables", "seasoning"],
+      "primary_proteins": ["default protein"],
+      "alternate_proteins": ["compatible protein"],
+      "prep_ahead": ["chop vegetables"],
+      "instructions": [
+        "Combine shared ingredients.",
+        "Cook until the selected variations are ready.",
+        "Pack leftovers in lunch portions if desired."
+      ],
+      "simple_serving_variations": ["serve components separately"],
+      "variation_dimensions": [
+        {
+          "id": "sample-one-pot-meal-base",
+          "key": "variation_starch_or_base",
+          "name": "Base",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-one-pot-meal-base-default",
+              "name": "default base",
+              "likability": 78,
+              "value": {"base": "default base"},
+              "diet_tags": ["configurable"],
+              "ingredient_additions": ["default base"],
+              "tags": ["sample"]
+            }
+          ]
+        },
+        {
+          "id": "sample-one-pot-meal-protein",
+          "key": "variation_primary_protein",
+          "name": "Protein",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-one-pot-meal-protein-compatible",
+              "name": "compatible protein",
+              "likability": 78,
+              "value": {"protein": "compatible protein"},
+              "diet_tags": ["vegetarian", "pescatarian"],
+              "ingredient_additions": ["compatible protein"],
+              "tags": ["sample"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-sheet-pan-dinner",
+      "name": "Sheet-Pan Dinner",
+      "likability": 76,
+      "active_prep_minutes": 20,
+      "cook_minutes": 30,
+      "make_ahead_score": 78,
+      "leftover_quality": 76,
+      "leftover_style": "sheet_pan",
+      "tags": ["sample", "prep-ahead"],
+      "diet_tags": ["contains_meat"],
+      "shared_ingredients": ["vegetables", "seasoning", "side ingredient"],
+      "primary_proteins": ["default protein"],
+      "alternate_proteins": ["compatible protein"],
+      "prep_ahead": ["cut vegetables", "mix seasoning"],
+      "instructions": [
+        "Arrange selected ingredients on a sheet pan.",
+        "Cook until the selected variations are done.",
+        "Serve with the selected side or base."
+      ],
+      "simple_serving_variations": ["plain roasted components"],
+      "variation_dimensions": [
+        {
+          "id": "sample-sheet-pan-dinner-vegetables",
+          "key": "variation_vegetables",
+          "name": "Vegetables",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-sheet-pan-dinner-vegetables-default",
+              "name": "default vegetables",
+              "likability": 76,
+              "value": ["default vegetables"],
+              "diet_tags": ["configurable"],
+              "ingredient_additions": ["default vegetables"],
+              "prep_ahead": ["cut default vegetables"],
+              "tags": ["sample"]
+            }
+          ]
+        },
+        {
+          "id": "sample-sheet-pan-dinner-protein",
+          "key": "variation_primary_protein",
+          "name": "Protein",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-sheet-pan-dinner-protein-default",
+              "name": "default protein",
+              "likability": 76,
+              "value": {"protein": "default protein"},
+              "diet_tags": ["contains_meat"],
+              "ingredient_additions": ["default protein"],
+              "tags": ["sample"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-noodle-dinner",
+      "name": "Noodle Dinner",
+      "likability": 80,
+      "active_prep_minutes": 18,
+      "cook_minutes": 20,
+      "make_ahead_score": 70,
+      "leftover_quality": 80,
+      "leftover_style": "noodle",
+      "tags": ["sample", "fast-weeknight"],
+      "diet_tags": ["configurable"],
+      "shared_ingredients": ["noodle base", "sauce", "vegetables"],
+      "primary_proteins": ["default protein"],
+      "alternate_proteins": ["compatible protein"],
+      "prep_ahead": ["wash vegetables", "portion sauce"],
+      "instructions": [
+        "Cook the selected noodle base.",
+        "Warm sauce and selected variation options.",
+        "Combine or serve components separately."
+      ],
+      "simple_serving_variations": ["plain noodles with sauce on the side"],
+      "variation_dimensions": [
+        {
+          "id": "sample-noodle-dinner-sauce",
+          "key": "variation_sauce",
+          "name": "Sauce",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-noodle-dinner-sauce-default",
+              "name": "default sauce",
+              "likability": 80,
+              "value": {"sauce": "default sauce"},
+              "diet_tags": ["configurable"],
+              "ingredient_additions": ["default sauce"],
+              "tags": ["sample"]
+            }
+          ]
+        },
+        {
+          "id": "sample-noodle-dinner-protein",
+          "key": "variation_diet_protein",
+          "name": "Diet-compatible protein",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-noodle-dinner-protein-compatible",
+              "name": "compatible protein",
+              "likability": 80,
+              "value": {"diet_protein": "compatible protein"},
+              "diet_tags": ["vegetarian", "pescatarian"],
+              "ingredient_additions": ["compatible protein"],
+              "tags": ["sample"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sample-soup-or-stew",
+      "name": "Soup Or Stew",
+      "likability": 74,
+      "active_prep_minutes": 15,
+      "cook_minutes": 45,
+      "make_ahead_score": 88,
+      "leftover_quality": 90,
+      "leftover_style": "soup",
+      "tags": ["sample", "make-ahead"],
+      "diet_tags": ["configurable"],
+      "shared_ingredients": ["broth or base", "vegetables", "seasoning"],
+      "primary_proteins": ["default protein"],
+      "alternate_proteins": ["compatible protein"],
+      "prep_ahead": ["chop vegetables", "portion broth or base"],
+      "instructions": [
+        "Simmer the selected base with vegetables.",
+        "Add selected protein or compatible option.",
+        "Store leftovers in lunch portions."
+      ],
+      "simple_serving_variations": ["broth and plain vegetables"],
+      "variation_dimensions": [
+        {
+          "id": "sample-soup-or-stew-base",
+          "key": "variation_base",
+          "name": "Base",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-soup-or-stew-base-default",
+              "name": "default base",
+              "likability": 74,
+              "value": {"base": "default base"},
+              "diet_tags": ["configurable"],
+              "ingredient_additions": ["default base"],
+              "tags": ["sample"]
+            }
+          ]
+        },
+        {
+          "id": "sample-soup-or-stew-protein",
+          "key": "variation_diet_protein",
+          "name": "Diet-compatible protein",
+          "selection_mode": "single",
+          "required": true,
+          "options": [
+            {
+              "id": "sample-soup-or-stew-protein-compatible",
+              "name": "compatible protein",
+              "likability": 74,
+              "value": {"diet_protein": "compatible protein"},
+              "diet_tags": ["vegetarian", "pescatarian"],
+              "ingredient_additions": ["compatible protein"],
+              "tags": ["sample"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
