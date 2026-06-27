@@ -74,7 +74,7 @@ The app should be structured so it can later be packaged as a Home Assistant add
 - Configurable host and port.
 - No dependency on native OS paths.
 - Static UI served by the same backend.
-- Ingress-friendly routing.
+- Ingress-friendly routing that works when Home Assistant serves the add-on under a generated subpath.
 - Health endpoint.
 
 Runtime configuration should support both environment variables and Home Assistant add-on options:
@@ -144,6 +144,9 @@ Cloud hosting is not part of the initial scope. AWS or another cloud platform ma
 - The add-on image can be built locally for `aarch64`.
 - Published installs can pull `ghcr.io/kmcrandom/family-menu-ha:<version>` and `latest`.
 - The add-on starts from a clean install, serves the Angular UI through ingress, and reports `GET /health` as healthy.
+- The same built UI works through Home Assistant sidebar ingress and direct root-based access such as a trusted reverse proxy hostname.
+- Static assets, favicon, Angular routes, and API calls must not assume the app is mounted at `/` only.
+- Home Assistant ingress sidebar access should not show a blank screen caused by root-relative scripts, styles, favicon, or API URLs escaping the ingress path.
 - Data persists under `/data` across add-on restarts.
 - The database path can be configured for local development, Docker, and Home Assistant add-on storage.
 - `/data/options.json` settings are honored when present, and environment variables still override them.
