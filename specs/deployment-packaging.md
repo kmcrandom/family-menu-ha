@@ -18,6 +18,7 @@ Family Menu should be packaged as a Home Assistant add-on repository using the s
 repository.yaml
 family-menu/
   config.yaml
+  CHANGELOG.md
   Dockerfile
   run.sh
   README.md
@@ -52,6 +53,16 @@ The add-on metadata should include:
 - `panel_icon: mdi:food-variant`
 - `stage: experimental`
 - Optional direct port mapping for local-network access to the same FastAPI/Angular UI.
+
+The add-on folder should include `family-menu/CHANGELOG.md` following the MinuteMetrics Home Assistant app convention. This changelog is the Home Assistant add-on changelog and must be updated for every released add-on version. The root-level `CHANGELOG.md`, if present, may mirror the same release notes for project-level browsing, but the add-on-local changelog is the required source for Home Assistant add-on validation.
+
+Release preparation should keep the Home Assistant add-on version and changelog aligned:
+
+- `family-menu/config.yaml` `version` must match the release tag without the leading `v`.
+- `family-menu/CHANGELOG.md` must contain an entry for the released version before publishing.
+- The top changelog entry should summarize user-visible changes, packaging changes, and relevant verification notes.
+- The publish workflow should continue to read the image tag version from `family-menu/config.yaml`.
+- A release must not be tagged if the add-on changelog does not contain the matching version entry.
 
 The add-on Dockerfile should follow the MinuteMetrics pattern:
 

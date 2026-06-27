@@ -754,6 +754,19 @@ select {
   gap: 14px;
 }
 
+.editor.read-only .mat-mdc-input-element,
+.editor.read-only textarea,
+.editor.read-only input {
+  color: var(--text);
+  opacity: 1;
+  -webkit-text-fill-color: var(--text);
+}
+
+.editor.read-only .mat-mdc-form-field-hint {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
 .instructions-dialog {
   display: grid;
   gap: 14px;

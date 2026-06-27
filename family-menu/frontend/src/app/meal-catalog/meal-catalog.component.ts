@@ -23,6 +23,7 @@ export class MealCatalogComponent {
   selectedTag = '';
   error = '';
   saving = false;
+  isEditing = false;
   newOptionNames: Record<string, string> = {};
 
   readonly mealForm = this.fb.group({
@@ -77,12 +78,12 @@ export class MealCatalogComponent {
     return [...tags].sort((a, b) => a.localeCompare(b));
   }
 
-  load(selectId?: string): void {
+  load(selectId?: string, editAfterLoad = false): void {
     this.api.getMeals(true).subscribe({
       next: (meals) => {
         this.meals = meals;
         const next = meals.find((meal) => meal.id === (selectId ?? this.selected?.id)) ?? meals[0];
-        if (next) this.selectMeal(next);
+        if (next) this.selectMeal(next, editAfterLoad);
         this.cdr.detectChanges();
       },
       error: () => {
@@ -92,8 +93,9 @@ export class MealCatalogComponent {
     });
   }
 
-  selectMeal(meal: Meal): void {
+  selectMeal(meal: Meal, editMode = false): void {
     this.selected = meal;
+    this.isEditing = editMode;
     this.mealForm.patchValue({
       name: meal.name,
       likability: meal.likability,
@@ -110,10 +112,22 @@ export class MealCatalogComponent {
       instructions_text: this.linesToText(meal.instructions),
       notes: meal.notes ?? '',
     });
+    this.syncFormMode();
+  }
+
+  startEditing(): void {
+    if (!this.selected) return;
+    this.isEditing = true;
+    this.syncFormMode();
+  }
+
+  cancelEditing(): void {
+    if (!this.selected) return;
+    this.selectMeal(this.selected, false);
   }
 
   saveMeal(): void {
-    if (!this.selected) return;
+    if (!this.selected || !this.isEditing) return;
     this.saving = true;
     const raw = this.mealForm.getRawValue();
     const payload: Partial<Meal> = {
@@ -135,14 +149,14 @@ export class MealCatalogComponent {
     this.api.patchMeal(this.selected.id, payload).subscribe({
       next: (meal) => {
         this.saving = false;
-        this.load(meal.id);
+        this.load(meal.id, false);
       },
       error: () => this.fail('Unable to save meal changes.'),
     });
   }
 
   archiveMeal(): void {
-    if (!this.selected) return;
+    if (!this.selected || !this.isEditing) return;
     const action = this.selected.status === 'active' ? this.api.archiveMeal(this.selected.id) : this.api.restoreMeal(this.selected.id);
     action.subscribe({
       next: (meal) => this.load(meal.id),
@@ -151,6 +165,7 @@ export class MealCatalogComponent {
   }
 
   addOption(dimension: VariationDimension): void {
+    if (!this.isEditing) return;
     const name = this.newOptionNames[dimension.id]?.trim();
     if (!name) return;
     this.api.createOption(dimension.id, {
@@ -160,15 +175,16 @@ export class MealCatalogComponent {
     }).subscribe({
       next: () => {
         this.newOptionNames[dimension.id] = '';
-        this.load(this.selected?.id);
+        this.load(this.selected?.id, true);
       },
       error: () => this.fail('Unable to add option.'),
     });
   }
 
   updateOption(option: VariationOption, payload: Partial<VariationOption>): void {
+    if (!this.isEditing) return;
     this.api.patchOption(option.id, payload).subscribe({
-      next: () => this.load(this.selected?.id),
+      next: () => this.load(this.selected?.id, true),
       error: () => this.fail('Unable to update option.'),
     });
   }
@@ -186,16 +202,18 @@ export class MealCatalogComponent {
   }
 
   toggleOption(option: VariationOption): void {
+    if (!this.isEditing) return;
     const action = option.status === 'active' ? this.api.archiveOption(option.id) : this.api.restoreOption(option.id);
     action.subscribe({
-      next: () => this.load(this.selected?.id),
+      next: () => this.load(this.selected?.id, true),
       error: () => this.fail('Unable to update option status.'),
     });
   }
 
   updateDimension(dimension: VariationDimension, payload: Partial<VariationDimension>): void {
+    if (!this.isEditing) return;
     this.api.patchDimension(dimension.id, payload).subscribe({
-      next: () => this.load(this.selected?.id),
+      next: () => this.load(this.selected?.id, true),
       error: () => this.fail('Unable to update dimension.'),
     });
   }
@@ -318,6 +336,14 @@ export class MealCatalogComponent {
 
   private ingredientLabel(ingredient: IngredientValue): string {
     return typeof ingredient === 'string' ? ingredient : ingredient.label;
+  }
+
+  private syncFormMode(): void {
+    if (this.isEditing) {
+      this.mealForm.enable({ emitEvent: false });
+      return;
+    }
+    this.mealForm.disable({ emitEvent: false });
   }
 
   private fail(message: string): void {

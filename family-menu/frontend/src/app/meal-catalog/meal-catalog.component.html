@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <h1>Meal Catalog</h1>
-      <p>Edit meals, likability, and independent variation options.</p>
+      <p>Review meals, likability, and independent variation options.</p>
     </div>
     <mat-checkbox [(ngModel)]="showArchived">
       Show archived
@@ -78,11 +78,14 @@
     </mat-card>
 
     @if (selected) {
-      <mat-card class="panel editor">
+      <mat-card class="panel editor" [class.read-only]="!isEditing">
         <div class="section-title">
           <div>
             <h2>{{ selected.name }}</h2>
-            <p>{{ selected.variation_dimensions.length }} variation dimensions</p>
+            <p>
+              {{ selected.variation_dimensions.length }} variation dimensions ·
+              {{ isEditing ? 'Editing' : 'Read only' }}
+            </p>
           </div>
           <div class="actions">
             @if (selected.source_url) {
@@ -90,10 +93,17 @@
                 <mat-icon>open_in_new</mat-icon>
               </a>
             }
-            <button mat-stroked-button type="button" (click)="archiveMeal()">
-              <mat-icon>{{ selected.status === 'active' ? 'archive' : 'unarchive' }}</mat-icon>
-              {{ selected.status === 'active' ? 'Archive' : 'Restore' }}
-            </button>
+            @if (!isEditing) {
+              <button mat-flat-button class="accent-action" type="button" (click)="startEditing()" aria-label="Edit selected meal">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+            } @else {
+              <button mat-stroked-button type="button" (click)="archiveMeal()">
+                <mat-icon>{{ selected.status === 'active' ? 'archive' : 'unarchive' }}</mat-icon>
+                {{ selected.status === 'active' ? 'Archive' : 'Restore' }}
+              </button>
+            }
           </div>
         </div>
 
@@ -142,12 +152,18 @@
             <mat-hint>One short step per line. These appear in the Weekly Plan instructions popup.</mat-hint>
           </mat-form-field>
           <mat-form-field class="wide" appearance="outline"><mat-label>Notes</mat-label><textarea matInput rows="2" formControlName="notes"></textarea></mat-form-field>
+          @if (isEditing) {
           <div class="form-actions">
             <button mat-flat-button class="accent-action" type="submit" [disabled]="saving">
               <mat-icon>save</mat-icon>
               Save Meal
             </button>
+            <button mat-stroked-button type="button" (click)="cancelEditing()" [disabled]="saving">
+              <mat-icon>close</mat-icon>
+              Cancel
+            </button>
           </div>
+          }
         </form>
 
         <div class="dimension-stack">
@@ -161,6 +177,7 @@
                 <mat-checkbox
                   class="small"
                   [ngModel]="dimension.required"
+                  [disabled]="!isEditing"
                   (ngModelChange)="updateDimension(dimension, { required: $event })"
                 >
                   Required
@@ -177,6 +194,7 @@
                           matInput
                           class="option-name"
                           [ngModel]="option.name"
+                          [disabled]="!isEditing"
                           (change)="updateOption(option, { name: $any($event.target).value })"
                         />
                       </mat-form-field>
@@ -188,10 +206,11 @@
                           min="0"
                           max="100"
                           [ngModel]="option.likability"
+                          [disabled]="!isEditing"
                           (change)="updateOption(option, { likability: +$any($event.target).value })"
                         />
                       </mat-form-field>
-                      <button mat-stroked-button type="button" (click)="toggleOption(option)">
+                      <button mat-stroked-button type="button" (click)="toggleOption(option)" [disabled]="!isEditing">
                         {{ option.status === 'active' ? 'Archive' : 'Restore' }}
                       </button>
                     </div>
@@ -202,6 +221,7 @@
                           matInput
                           rows="3"
                           [ngModel]="ingredientsToText(option.ingredient_additions)"
+                          [disabled]="!isEditing"
                           (change)="updateOptionLines(option, 'ingredient_additions', $any($event.target).value)"
                         ></textarea>
                         <mat-hint>One per line. Added when this option is selected.</mat-hint>
@@ -212,6 +232,7 @@
                           matInput
                           rows="3"
                           [ngModel]="linesToText(option.ingredient_omissions)"
+                          [disabled]="!isEditing"
                           (change)="updateOptionLines(option, 'ingredient_omissions', $any($event.target).value)"
                         ></textarea>
                         <mat-hint>One per line. Removes matching shared ingredients when selected.</mat-hint>
@@ -222,6 +243,7 @@
                           matInput
                           rows="3"
                           [ngModel]="linesToText(option.prep_ahead)"
+                          [disabled]="!isEditing"
                           (change)="updateOptionLines(option, 'prep_ahead', $any($event.target).value)"
                         ></textarea>
                         <mat-hint>One per line. Added to Sunday Prep when selected.</mat-hint>
@@ -231,6 +253,7 @@
                 }
               </div>
 
+              @if (isEditing) {
               <div class="add-option">
                 <mat-form-field appearance="outline">
                   <mat-label>Add option</mat-label>
@@ -241,6 +264,7 @@
                   Add
                 </button>
               </div>
+              }
             </mat-card>
           }
         </div>
