@@ -32,7 +32,8 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 ## Primary Actions
 
 - Create meal.
-- Edit meal.
+- Enter edit mode for the selected meal.
+- Save meal edits.
 - Duplicate meal.
 - Archive or restore meal.
 - Adjust likability.
@@ -45,6 +46,13 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 
 ## Editing Requirements
 
+- Selecting an existing meal should open the Meal Catalog detail in read-only view mode by default.
+- Read-only view mode should show the selected meal's details, grocery-impacting fields, Sunday prep tasks, source link, instructions, variation dimensions, and variation options without allowing accidental field edits.
+- Read-only view mode should provide a clear Edit action, preferably an icon button with an accessible label, that switches the selected meal detail into edit mode.
+- Edit mode should expose the existing meal editing controls and save/archive/restore actions.
+- Switching to a different existing meal should return the detail pane to read-only view mode for that meal.
+- Creating a meal or duplicating a meal should open the resulting meal in edit mode so the user can immediately fill in or adjust fields.
+- If the user has unsaved edits and attempts to leave edit mode or select another meal, the app should either preserve the local draft until saved or clearly confirm discarding changes.
 - Likability should be editable as a 0-100 percentage.
 - Meal numeric fields such as likability, prep minutes, cook minutes, make-ahead score, and leftover quality should use compact short-field widths on desktop and tablet.
 - Meal identity and short metadata fields should share rows where readable, while long text areas such as ingredients, prep tasks, and notes should remain wide.
@@ -104,6 +112,11 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 
 ## Acceptance Criteria
 
+- Selecting an existing meal opens the detail pane in read-only mode by default.
+- The selected meal cannot be changed until the user activates the Edit action.
+- Activating Edit switches the selected meal detail into editable controls without changing the selected meal.
+- Selecting another existing meal exits edit mode and shows the newly selected meal read-only, unless unsaved edits require a discard/preserve flow.
+- Creating or duplicating a meal opens the new meal in edit mode.
 - A user can change a meal's likability and see it affect future scoring.
 - A user can add a diet-compatible protein alternative to an existing shared-base meal.
 - A user can add a new variation dimension or option under an existing meal and later see it in the Weekly Plan screen.
