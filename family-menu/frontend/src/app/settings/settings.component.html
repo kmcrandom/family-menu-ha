@@ -37,10 +37,29 @@
 
       <div class="form-actions wide">
         <button mat-flat-button color="primary" type="submit"><mat-icon>save</mat-icon>Save Settings</button>
-        <a mat-stroked-button [href]="exportUrl()" target="_blank"><mat-icon>download</mat-icon>Export JSON</a>
       </div>
     </form>
   </div>
+
+  <mat-card class="panel portability-panel">
+    <div class="section-title">
+      <h2>Import / Export</h2>
+    </div>
+    <div class="portability-actions">
+      <a mat-stroked-button [href]="exportUrl()" target="_blank"><mat-icon>download</mat-icon>Export JSON</a>
+      <input #importFileInput class="file-input" type="file" accept="application/json,.json" (change)="selectImportFile($event)" />
+      <button mat-stroked-button type="button" (click)="importFileInput.click()"><mat-icon>upload_file</mat-icon>Choose Import</button>
+      <button mat-flat-button color="warn" type="button" [disabled]="!selectedImportData" (click)="importSelectedFile()">
+        <mat-icon>restore</mat-icon>Restore Import
+      </button>
+      @if (selectedImportFile) {
+        <span class="selected-file">{{ selectedImportFile.name }}</span>
+      }
+    </div>
+    @if (importMessage) {
+      <div class="notice success compact-notice">{{ importMessage }}</div>
+    }
+  </mat-card>
 
   <div class="two-column">
     <mat-card class="panel">

@@ -45,6 +45,9 @@ flowchart LR
 - The SQLite database is the source of truth.
 - The app should work on a local network without cloud dependencies.
 - Export/import should be available so meal data is not trapped in the app.
+- Export JSON is a portable app-data backup, not a Home Assistant add-on options backup.
+- Import JSON should restore app-owned data from a prior export with transactional all-or-nothing behavior.
+- The first import implementation should support full overwrite restore only; merge import is deferred because meal, variation, plan, history, and checklist conflict handling needs explicit product decisions.
 - The default local database path is repo-local for development, but database files must be ignored by git.
 - Private seed files and exports must be ignored by git unless intentionally sanitized and renamed as examples.
 - A Home Assistant add-on wraps the same app with Home Assistant-compatible packaging and ingress.

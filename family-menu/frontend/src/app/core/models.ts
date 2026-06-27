@@ -174,3 +174,8 @@ export interface GroceryPrep {
   grocery_items: GroceryPrepItem[];
   prep_items: GroceryPrepItem[];
 }
+
+export interface ImportDataResponse {
+  imported: Record<string, number>;
+  household: HouseholdConfig;
+}

@@ -864,6 +864,37 @@ select {
   display: block;
 }
 
+.portability-panel {
+  margin-top: 12px;
+}
+
+.portability-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.file-input {
+  display: none;
+}
+
+.selected-file {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-notice {
+  margin-top: 10px;
+  padding: 9px 11px;
+}
+
 .member-list {
   display: grid;
   gap: 10px;

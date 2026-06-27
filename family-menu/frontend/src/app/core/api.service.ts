@@ -7,6 +7,7 @@ import {
   GroceryPrepItem,
   HouseholdConfig,
   HouseholdMember,
+  ImportDataResponse,
   Meal,
   MealEvent,
   PlannedMeal,
@@ -151,5 +152,12 @@ export class ApiService {
 
   patchDietaryProfile(id: string, payload: Partial<DietaryProfile>): Observable<DietaryProfile> {
     return this.http.patch<DietaryProfile>(`${this.base}/household/dietary-profiles/${id}`, payload);
+  }
+
+  importData(data: Record<string, unknown>, confirmOverwrite: boolean): Observable<ImportDataResponse> {
+    return this.http.post<ImportDataResponse>(`${this.base}/import`, {
+      data,
+      confirm_overwrite: confirmOverwrite,
+    });
   }
 }

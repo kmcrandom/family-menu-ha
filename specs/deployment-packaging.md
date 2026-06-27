@@ -111,7 +111,10 @@ Cloud hosting is not part of the initial scope. AWS or another cloud platform ma
 
 - SQLite is the source of truth.
 - Export should produce a portable JSON backup.
-- Import and merge restore should be added after the first local app pass.
+- Import should accept the app's portable JSON backup and restore preferences, household members, dietary profiles, meal catalog, variation dimensions, variation options, weekly plans, planned meals, vacation blocks, history events, and checklist items.
+- Import should require explicit overwrite confirmation and should leave current data untouched when validation or restore fails.
+- Import and export should not include deployment-specific Home Assistant add-on options such as database path, seed path, host, or port.
+- Merge restore should be added later only after conflict handling is specified.
 - The app should document where the database lives in local and Home Assistant deployments.
 - Default development database location is repo-local, such as `family-menu.db`, but all SQLite database files should be ignored by git.
 - Private seed catalogs and exported backups should be ignored by git by default.
