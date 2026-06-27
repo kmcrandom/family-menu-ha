@@ -431,7 +431,7 @@ Tasks:
 - Render and edit household defaults.
 - Edit recommendation weights at a basic level.
 - Export complete app data to portable JSON.
-- Defer import app data with explicit overwrite/merge behavior to a follow-up portability pass.
+- Add import app data in a follow-up portability pass with explicit overwrite confirmation first; merge behavior remains deferred.
 - Show database path and app version.
 
 Tests:
@@ -440,14 +440,14 @@ Tests:
 - Mixed-diet mode applies to newly generated plans.
 - Settings changes apply to new plans without rewriting old plans.
 - Export includes catalog, dimensions, options, plans, events, and preferences.
-- Import merge behavior is documented as deferred.
+- Import overwrite behavior is documented for the follow-up portability pass; merge behavior remains deferred.
 
 Manual checks:
 
 - Configure multiple dietary profiles and switch between mixed-diet modes.
 - Change default dinner count for future weeks.
 - Export data.
-- Confirm import is not presented as a shipped v1 action.
+- Confirm import requires explicit overwrite confirmation before replacing app data.
 
 Exit criteria:
 

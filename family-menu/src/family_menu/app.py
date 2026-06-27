@@ -21,6 +21,7 @@ from .schemas import (
     HouseholdMemberCreate,
     HouseholdMemberPatch,
     HouseholdPatch,
+    ImportDataRequest,
     MealEventCreate,
     MealPatch,
     PlannedMealPatch,
@@ -211,6 +212,13 @@ def create_app(settings: Settings | None = None, conn: sqlite3.Connection | None
     @app.get("/api/v1/export")
     def export_data() -> dict:
         return store.export_data()
+
+    @app.post("/api/v1/import")
+    def import_data(payload: ImportDataRequest) -> dict:
+        try:
+            return store.import_data(payload.data, confirm_overwrite=payload.confirm_overwrite)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from None
 
     mount_frontend(app, settings.static_dir)
     return app

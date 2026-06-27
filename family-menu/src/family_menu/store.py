@@ -1394,6 +1394,377 @@ class Store:
             "checklist_items": [row_dict(row) for row in self.conn.execute("SELECT * FROM checklist_items")],
         }
 
+    def import_data(self, data: dict[str, Any], confirm_overwrite: bool = False) -> dict:
+        if not confirm_overwrite:
+            raise ValueError("Import requires overwrite confirmation.")
+        self._validate_export_shape(data)
+
+        from .migrations import init_db
+
+        temp = sqlite3.connect(":memory:")
+        temp.row_factory = sqlite3.Row
+        temp.execute("PRAGMA foreign_keys = ON")
+        try:
+            init_db(temp)
+            temp_store = Store(temp)
+            try:
+                temp_store._restore_export_rows(data)
+                temp_violations = temp.execute("PRAGMA foreign_key_check").fetchall()
+                if temp_violations:
+                    raise ValueError("Import data contains invalid linked records.")
+            except sqlite3.Error as exc:
+                raise ValueError("Import data contains invalid linked records.") from exc
+
+            try:
+                with self.conn:
+                    self._restore_export_rows(data)
+                    violations = self.conn.execute("PRAGMA foreign_key_check").fetchall()
+                    if violations:
+                        raise ValueError("Import data contains invalid linked records.")
+            except sqlite3.Error as exc:
+                raise ValueError("Import data contains invalid linked records.") from exc
+        finally:
+            temp.close()
+
+        counts = {
+            "meals": len(data.get("meals", [])),
+            "variation_dimensions": sum(len(meal.get("variation_dimensions", [])) for meal in data.get("meals", [])),
+            "variation_options": sum(
+                len(dimension.get("options", []))
+                for meal in data.get("meals", [])
+                for dimension in meal.get("variation_dimensions", [])
+            ),
+            "plans": len(data.get("plans", [])),
+            "planned_meals": sum(len(plan.get("planned_meals", [])) for plan in data.get("plans", [])),
+            "vacation_blocks": sum(len(plan.get("vacation_blocks", [])) for plan in data.get("plans", [])),
+            "events": len(data.get("events", [])),
+            "checklist_items": len(data.get("checklist_items", [])),
+            "household_members": len(data.get("household", {}).get("members", [])),
+            "dietary_profiles": len(data.get("household", {}).get("dietary_profiles", [])),
+        }
+        return {"imported": counts, "household": self.household_config()}
+
+    def _validate_export_shape(self, data: dict[str, Any]) -> None:
+        if not isinstance(data, dict):
+            raise ValueError("Import file must be a Family Menu JSON object.")
+        if data.get("version") != 1:
+            raise ValueError("Unsupported Family Menu export version.")
+        for key in ["preferences", "household", "meals", "plans", "events", "checklist_items"]:
+            if key not in data:
+                raise ValueError(f"Import file is missing {key}.")
+        if not isinstance(data["household"], dict):
+            raise ValueError("Import household data is invalid.")
+        for key in ["meals", "plans", "events", "checklist_items"]:
+            if not isinstance(data[key], list):
+                raise ValueError(f"Import {key} must be a list.")
+
+    def _restore_export_rows(self, data: dict[str, Any]) -> None:
+        self._clear_app_rows()
+        timestamp = now_iso()
+        preferences = Preferences(**data["preferences"]).model_dump()
+        self.conn.execute(
+            """
+            INSERT INTO preferences(id, data, updated_at)
+            VALUES (1, ?, ?)
+            """,
+            (dumps(preferences), timestamp),
+        )
+        household = data.get("household", {})
+        for profile in household.get("dietary_profiles", []):
+            self.conn.execute(
+                """
+                INSERT INTO dietary_profiles(
+                  id, name, type, excluded_tags, included_tags, notes, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    profile["id"],
+                    profile["name"],
+                    profile.get("type", "custom"),
+                    dumps(profile.get("excluded_tags", [])),
+                    dumps(profile.get("included_tags", [])),
+                    profile.get("notes"),
+                    profile.get("created_at") or timestamp,
+                    profile.get("updated_at") or timestamp,
+                ),
+            )
+        for member in household.get("members", []):
+            self.conn.execute(
+                """
+                INSERT INTO household_members(
+                  id, display_name, status, dinner_servings, leftover_lunch_servings,
+                  dietary_profile_ids, preference_tags, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    member["id"],
+                    member["display_name"],
+                    member.get("status", "active"),
+                    member.get("dinner_servings", 1),
+                    member.get("leftover_lunch_servings", 0),
+                    dumps(member.get("dietary_profile_ids", [])),
+                    dumps(member.get("preference_tags", [])),
+                    member.get("created_at") or timestamp,
+                    member.get("updated_at") or timestamp,
+                ),
+            )
+        for meal in data.get("meals", []):
+            self._insert_imported_meal(meal, timestamp)
+            for index, dimension in enumerate(meal.get("variation_dimensions", [])):
+                self._insert_imported_dimension(meal["id"], dimension, index, timestamp)
+                for option in dimension.get("options", []):
+                    self._insert_imported_option(meal["id"], dimension["id"], option, timestamp)
+        for plan in data.get("plans", []):
+            self._insert_imported_plan(plan, timestamp)
+            for block in plan.get("vacation_blocks", []):
+                self._insert_imported_vacation_block(plan["id"], block, timestamp)
+            for planned in plan.get("planned_meals", []):
+                self._insert_imported_planned_meal(plan["id"], planned, timestamp)
+        for event in data.get("events", []):
+            self._insert_imported_event(event, timestamp)
+        for item in data.get("checklist_items", []):
+            self._insert_imported_checklist_item(item, timestamp)
+
+    def _clear_app_rows(self) -> None:
+        for table in [
+            "checklist_items",
+            "meal_events",
+            "planned_meals",
+            "vacation_blocks",
+            "weekly_plans",
+            "variation_options",
+            "variation_dimensions",
+            "meals",
+            "household_members",
+            "dietary_profiles",
+            "preferences",
+        ]:
+            self.conn.execute(f"DELETE FROM {table}")
+
+    def _insert_imported_meal(self, meal: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO meals(
+              id, name, status, likability, active_prep_minutes, cook_minutes,
+              make_ahead_score, leftover_quality, leftover_style, tags,
+              diet_tags, shared_ingredients, primary_proteins, alternate_proteins,
+              prep_ahead, instructions, source_url, source_name,
+              simple_serving_variations, notes, user_modified, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            """,
+            (
+                meal["id"],
+                meal["name"],
+                meal.get("status", "active"),
+                meal.get("likability", 80),
+                meal.get("active_prep_minutes", 20),
+                meal.get("cook_minutes", 20),
+                meal.get("make_ahead_score", 50),
+                meal.get("leftover_quality", 70),
+                meal.get("leftover_style", "mixed"),
+                dumps(meal.get("tags", [])),
+                dumps(meal.get("diet_tags", [])),
+                dumps(normalize_ingredient_items(meal.get("shared_ingredients", []))),
+                dumps(meal.get("primary_proteins", [])),
+                dumps(meal.get("alternate_proteins", [])),
+                dumps(meal.get("prep_ahead", [])),
+                dumps(meal.get("instructions", [])),
+                meal.get("source_url"),
+                meal.get("source_name"),
+                dumps(meal.get("simple_serving_variations", [])),
+                meal.get("notes"),
+                meal.get("created_at") or timestamp,
+                meal.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_dimension(
+        self,
+        meal_id: str,
+        dimension: dict[str, Any],
+        index: int,
+        timestamp: str,
+    ) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO variation_dimensions(
+              id, meal_id, key, name, selection_mode, required, display_order,
+              status, user_modified, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            """,
+            (
+                dimension["id"],
+                meal_id,
+                dimension["key"],
+                dimension["name"],
+                dimension.get("selection_mode", "single"),
+                1 if dimension.get("required") else 0,
+                dimension.get("display_order", index),
+                dimension.get("status", "active"),
+                dimension.get("created_at") or timestamp,
+                dimension.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_option(
+        self,
+        meal_id: str,
+        dimension_id: str,
+        option: dict[str, Any],
+        timestamp: str,
+    ) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO variation_options(
+              id, dimension_id, meal_id, name, status, likability, value,
+              diet_tags, compatible_diet_profiles, ingredient_additions,
+              ingredient_omissions, prep_ahead, instructions, tags, overrides,
+              user_modified, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            """,
+            (
+                option["id"],
+                dimension_id,
+                meal_id,
+                option["name"],
+                option.get("status", "active"),
+                option.get("likability", 80),
+                dumps(option.get("value", {})),
+                dumps(option.get("diet_tags", [])),
+                dumps(option.get("compatible_diet_profiles", [])),
+                dumps(normalize_ingredient_items(option.get("ingredient_additions", []))),
+                dumps(option.get("ingredient_omissions", [])),
+                dumps(option.get("prep_ahead", [])),
+                dumps(option.get("instructions", [])),
+                dumps(option.get("tags", [])),
+                dumps(option.get("overrides", {})),
+                option.get("created_at") or timestamp,
+                option.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_plan(self, plan: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO weekly_plans(
+              id, week_start_date, shopping_date, target_dinner_count, status, notes, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                plan["id"],
+                plan["week_start_date"],
+                plan["shopping_date"],
+                plan.get("target_dinner_count", 5),
+                plan.get("status", "draft"),
+                plan.get("notes"),
+                plan.get("created_at") or timestamp,
+                plan.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_vacation_block(self, plan_id: str, block: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO vacation_blocks(
+              id, weekly_plan_id, start_date, end_date, scope, label, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                block["id"],
+                plan_id,
+                block["start_date"],
+                block["end_date"],
+                block.get("scope", "day"),
+                block.get("label", "Vacation"),
+                block.get("created_at") or timestamp,
+                block.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_planned_meal(self, plan_id: str, planned: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO planned_meals(
+              id, weekly_plan_id, meal_id, variation_selections, planned_date, position,
+              meal_slot, servings_dinner, leftover_lunch_servings, locked, variation_locks,
+              state, notes, recommendation_reasons, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                planned["id"],
+                plan_id,
+                planned["meal_id"],
+                dumps(planned.get("variation_selections", {})),
+                planned["planned_date"],
+                planned.get("position", 0),
+                planned.get("meal_slot", "dinner"),
+                planned.get("servings_dinner", 4),
+                planned.get("leftover_lunch_servings", 2),
+                1 if planned.get("locked") else 0,
+                dumps(planned.get("variation_locks", {})),
+                planned.get("state", "planned"),
+                planned.get("notes"),
+                dumps(planned.get("recommendation_reasons", [])),
+                planned.get("created_at") or timestamp,
+                planned.get("updated_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_event(self, event: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO meal_events(
+              id, meal_id, planned_meal_id, eaten_date, variation_selections,
+              servings_dinner, leftover_lunch_servings, feedback, notes, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event["id"],
+                event["meal_id"],
+                event.get("planned_meal_id"),
+                event["eaten_date"],
+                dumps(event.get("variation_selections", {})),
+                event.get("servings_dinner", 4),
+                event.get("leftover_lunch_servings", 2),
+                event.get("feedback"),
+                event.get("notes"),
+                event.get("created_at") or timestamp,
+            ),
+        )
+
+    def _insert_imported_checklist_item(self, item: dict[str, Any], timestamp: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO checklist_items(
+              id, weekly_plan_id, kind, label, category, source, checked, custom,
+              position, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                item["id"],
+                item["weekly_plan_id"],
+                item["kind"],
+                item["label"],
+                item.get("category"),
+                item.get("source"),
+                1 if item.get("checked") else 0,
+                1 if item.get("custom") else 0,
+                item.get("position", 0),
+                item.get("created_at") or timestamp,
+                item.get("updated_at") or timestamp,
+            ),
+        )
+
 
 def ingredient_category(label: str) -> str:
     lower = label.lower()

@@ -411,4 +411,14 @@ class GroceryPrepResponse(BaseModel):
     prep_items: list[GroceryPrepItem]
 
 
+class ImportDataRequest(BaseModel):
+    data: dict[str, Any]
+    confirm_overwrite: bool = False
+
+
+class ImportDataResponse(BaseModel):
+    imported: dict[str, int]
+    household: HouseholdConfig
+
+
 WeeklyPlan.model_rebuild()
