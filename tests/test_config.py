@@ -15,7 +15,7 @@ def test_load_settings_uses_local_defaults_without_addon_options(monkeypatch, tm
     assert settings.seed_path.name == "generic-starter-meal-catalog.example.json"
     assert settings.seed_path.parts[-3:] == ("family-menu", "data", "generic-starter-meal-catalog.example.json")
     assert settings.host == "127.0.0.1"
-    assert settings.port == 8097
+    assert settings.port == 8081
     assert settings.auto_seed is True
 
 

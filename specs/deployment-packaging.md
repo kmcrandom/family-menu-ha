@@ -47,7 +47,7 @@ The add-on metadata should include:
 - `boot: auto`
 - `init: false`
 - `ingress: true`
-- `ingress_port: 8097`
+- `ingress_port: 8081`
 - `panel_title: Family Menu`
 - `panel_icon: mdi:food-variant`
 - `stage: experimental`
@@ -62,7 +62,7 @@ The add-on Dockerfile should follow the MinuteMetrics pattern:
 - Install Python runtime dependencies into a virtual environment.
 - Copy the generic seed data into the image.
 - Launch through `/run.sh`.
-- Set `FAMILY_MENU_HOST=0.0.0.0`, `FAMILY_MENU_PORT=8097`, and a default static path inside the image.
+- Set `FAMILY_MENU_HOST=0.0.0.0`, `FAMILY_MENU_PORT=8081`, and a default static path inside the image.
 
 Published installs should pull a pre-built GHCR image rather than compiling on the Home Assistant device. Local development builds remain possible by removing the `image` field from a copied local add-on config and letting Supervisor build the Dockerfile.
 
@@ -85,7 +85,7 @@ Runtime configuration should support both environment variables and Home Assista
 - Default add-on database path: `/data/family-menu.sqlite`.
 - Default add-on seed path: packaged generic sample data, unless `seed.path` is configured.
 - Default add-on static path: built Angular static assets inside the image.
-- Default host/port: `0.0.0.0:8097` in the add-on, `127.0.0.1:8097` for local development.
+- Default host/port: `0.0.0.0:8081` in the add-on, `127.0.0.1:8081` for local development.
 - Optional `auto_seed` setting controls whether an empty database imports the seed catalog.
 
 Example add-on options:
@@ -98,7 +98,7 @@ seed:
   auto_seed: true
 server:
   host: 0.0.0.0
-  port: 8097
+  port: 8081
 ```
 
 The schema should validate these options as strings/booleans/ports without requiring any household-specific values.

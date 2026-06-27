@@ -34,7 +34,7 @@ RUN python3 -m venv /opt/family-menu \
     && chmod a+x /run.sh
 
 ENV FAMILY_MENU_HOST=0.0.0.0
-ENV FAMILY_MENU_PORT=8097
+ENV FAMILY_MENU_PORT=8081
 ENV FAMILY_MENU_STATIC=/app/src/family_menu/static
 ENV PATH=/opt/family-menu/bin:$PATH
 

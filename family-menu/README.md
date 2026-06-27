@@ -21,7 +21,7 @@ seed:
   auto_seed: true
 server:
   host: 0.0.0.0
-  port: 8097
+  port: 8081
 ```
 
 The SQLite database is stored under `/data` by default and persists across add-on restarts and upgrades.
@@ -30,7 +30,9 @@ The packaged seed catalog is generic sample data. Private meal catalogs, exports
 
 ## Access
 
-Normal access should use Home Assistant ingress. The optional direct port is intended for trusted local-network access only until app-level authentication is added.
+Normal access can use Home Assistant ingress. The add-on also exposes host port `8081` by default so a trusted local reverse proxy can forward to `http://<home-assistant-host>:8081`.
+
+Direct port access should be treated as trusted local-network access only until app-level authentication is added. If the app is reachable from the public internet, protect it with an authenticated reverse proxy, VPN, Home Assistant access layer, or similar control.
 
 ## Backup
 

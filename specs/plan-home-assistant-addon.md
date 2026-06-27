@@ -27,8 +27,8 @@ Prepare Family Menu to install and run as a Home Assistant add-on while preservi
   - `version: "0.1.0"`
   - `image: ghcr.io/kmcrandom/family-menu-ha`
   - `arch: [aarch64]`
-  - ingress enabled on port `8097`
-  - optional direct `8097/tcp` mapping
+  - ingress enabled on port `8081`
+  - optional direct `8081/tcp` mapping
   - options and schema for database path, seed path, auto-seed, host, and port
 - Add `family-menu/Dockerfile` based on `ghcr.io/home-assistant/${BUILD_ARCH}-base:latest`.
 - Add `family-menu/run.sh` that launches `python3 -m family_menu`.
@@ -58,7 +58,7 @@ Prepare Family Menu to install and run as a Home Assistant add-on while preservi
   - database: `/data/family-menu.sqlite`
   - seed: `/app/data/generic-starter-meal-catalog.example.json`
   - static: `/app/src/family_menu/static`
-  - host/port: `0.0.0.0:8097`
+  - host/port: `0.0.0.0:8081`
 - Add tests for options-file parsing, default add-on paths, and environment override precedence.
 
 ## Phase 4: CI and Publish Workflow

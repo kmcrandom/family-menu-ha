@@ -13,7 +13,7 @@ class Settings:
     seed_path: Path
     static_dir: Path
     host: str = "127.0.0.1"
-    port: int = 8097
+    port: int = 8081
     reload: bool = False
     auto_seed: bool = True
 
@@ -34,7 +34,7 @@ def load_settings(options_path: Path | None = None) -> Settings:
     )
     default_static = Path("/app/src/family_menu/static") if has_addon_options else package_dir / "static"
     default_host = "0.0.0.0" if has_addon_options else "127.0.0.1"
-    default_port = 8097
+    default_port = 8081
     default_auto_seed = True
 
     db_path = Path(_setting("FAMILY_MENU_DB", addon_options, ("database", "path"), default_db))

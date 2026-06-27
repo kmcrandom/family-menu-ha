@@ -28,7 +28,7 @@ Run the local app:
 .venv/bin/python -m family_menu
 ```
 
-The app serves the built Angular UI at `http://127.0.0.1:8097` and seeds generic sample meals into `family-menu.db` on first run. Override runtime paths with environment variables such as `FAMILY_MENU_DB`, `FAMILY_MENU_SEED`, `FAMILY_MENU_STATIC`, `FAMILY_MENU_HOST`, and `FAMILY_MENU_PORT`.
+The app serves the built Angular UI at `http://127.0.0.1:8081` and seeds generic sample meals into `family-menu.db` on first run. Override runtime paths with environment variables such as `FAMILY_MENU_DB`, `FAMILY_MENU_SEED`, `FAMILY_MENU_STATIC`, `FAMILY_MENU_HOST`, and `FAMILY_MENU_PORT`.
 
 ## Home Assistant Add-on
 

@@ -11,14 +11,14 @@ startup: application
 boot: auto
 init: false
 ingress: true
-ingress_port: 8097
+ingress_port: 8081
 panel_title: Family Menu
 panel_icon: mdi:food-variant
 stage: experimental
 ports:
-  8097/tcp: null
+  8081/tcp: 8081
 ports_description:
-  8097/tcp: Family Menu web app and API
+  8081/tcp: Family Menu web app and API exposed on host port 8081
 options:
   database:
     path: /data/family-menu.sqlite
@@ -27,7 +27,7 @@ options:
     auto_seed: true
   server:
     host: 0.0.0.0
-    port: 8097
+    port: 8081
 schema:
   database:
     path: str
