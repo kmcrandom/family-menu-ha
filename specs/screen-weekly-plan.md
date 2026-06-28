@@ -77,6 +77,7 @@ The Weekly Plan screen is the primary workflow for selecting five dinners, assig
 - In separate-variation mode, the screen should show separate compatible selections for configured diet groups when a meal supports them.
 - In common-compatible mode, the screen should only offer meals and variation options that satisfy all active household dietary profiles.
 - Locked meals must remain unchanged during regeneration.
+- Regenerating unlocked meals should be able to produce different unlocked meal and variation choices across repeated clicks, while staying within eligible, high-scoring recommendations.
 - A variation dimension can be locked separately from the top-level meal if the user wants to keep a meal and one selected option while still regenerating another topping, base, sauce, protein, or side choice.
 - Replacing a meal should offer alternatives sorted by recommendation score and explain why each is eligible.
 - Swapping a variation option should offer options for the current meal and dimension sorted by option recommendation score and explain why each is eligible.
@@ -126,6 +127,7 @@ The Weekly Plan screen is the primary workflow for selecting five dinners, assig
 - Longer protein variation labels wrap cleanly without pushing the dropdown too far right.
 - A user can visually scan variation types by consistent muted color, such as vegetables always using the vegetables color.
 - A user can lock a slot, regenerate, and see the locked slot preserved.
+- A user can click regenerate again with one or more unlocked slots and see the app explore a different valid recommendation when there are multiple strong eligible candidates.
 - A user can see whether a recommendation is driven by the meal score, one or more variation-option scores, or both.
 - A user can mark a planned meal eaten and create a history event.
 - The screen remains useful on a phone-sized viewport.

@@ -1,5 +1,45 @@
 from __future__ import annotations
 
+from datetime import date
+
+from family_menu import recommender
+
+
+def test_ranked_candidate_choice_uses_bounded_random_window(monkeypatch):
+    choices_seen = []
+
+    def choose_last(candidates):
+        choices_seen.append(candidates)
+        return candidates[-1]
+
+    monkeypatch.setattr(recommender.random, "choice", choose_last)
+
+    selected = recommender.choose_ranked_candidate(
+        [
+            (70, "low", {"id": "low"}),
+            (94, "second", {"id": "second"}),
+            (100, "best", {"id": "best"}),
+            (84, "outside-window", {"id": "outside-window"}),
+        ]
+    )
+
+    assert [candidate[1] for candidate in choices_seen[0]] == ["best", "second"]
+    assert selected[2]["id"] == "second"
+
+
+def test_regeneration_can_change_unlocked_meals_with_controlled_randomness(client, monkeypatch):
+    plan = client.get("/api/v1/plans/current").json()
+    monkeypatch.setattr(recommender.random, "choice", lambda candidates: candidates[0])
+    first = client.post(f"/api/v1/plans/{plan['id']}/generate", json={}).json()
+
+    monkeypatch.setattr(recommender.random, "choice", lambda candidates: candidates[-1])
+    second = client.post(f"/api/v1/plans/{plan['id']}/generate", json={}).json()
+
+    first_meals = [item["meal_id"] for item in first["planned_meals"]]
+    second_meals = [item["meal_id"] for item in second["planned_meals"]]
+    assert first_meals != second_meals
+    assert len(set(second_meals)) == len(second_meals)
+
 
 def test_locked_meal_survives_regeneration(client):
     plan = client.get("/api/v1/plans/current").json()
@@ -12,7 +52,39 @@ def test_locked_meal_survives_regeneration(client):
     assert match["meal_id"] == locked["meal_id"]
 
 
-def test_history_changes_option_suggestions(client):
+def test_locked_variation_survives_regeneration(monkeypatch):
+    def fail_random_choice(candidates):
+        raise AssertionError("locked variation should not be randomized")
+
+    monkeypatch.setattr(recommender.random, "choice", fail_random_choice)
+
+    selections, reasons = recommender.choose_variation_options(
+        {
+            "variation_dimensions": [
+                {
+                    "id": "meal-protein",
+                    "options": [
+                        {"id": "chicken", "name": "Chicken", "status": "active", "likability": 90},
+                        {"id": "tofu", "name": "Tofu", "status": "active", "likability": 80},
+                    ],
+                }
+            ]
+        },
+        {"option_counts": {}, "last_option": {}},
+        date(2026, 7, 1),
+        {
+            "variation_selections": {"meal-protein": "tofu"},
+            "variation_locks": {"meal-protein": True},
+        },
+        regenerate_variations=True,
+    )
+
+    assert selections == {"meal-protein": "tofu"}
+    assert reasons == ["variation_locked_by_user"]
+
+
+def test_history_changes_option_suggestions(client, monkeypatch):
+    monkeypatch.setattr(recommender.random, "choice", lambda candidates: candidates[0])
     plan = client.get("/api/v1/plans/current").json()
     generated = client.post(f"/api/v1/plans/{plan['id']}/generate", json={}).json()
     meal_with_choices = next(
