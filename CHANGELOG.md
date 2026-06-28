@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.6 - 2026-06-28
+
+- Move Meal Catalog Archive/Edit and Save/Cancel actions into the selected meal header.
+- Confirm meal archive actions before archiving and remove the duplicate Source URL field icon.
+- Add edit-mode variation dimension add/remove controls with reusable type suggestions.
+- Add custom variation types with Material color presets and custom color selection.
+- Preserve variation dimension colors through API responses, migrations, import/export, Meal Catalog, and Weekly Plan.
+
 ## 0.1.5 - 2026-06-27
 
 - Add a Home Assistant add-on changelog inside the add-on folder.
