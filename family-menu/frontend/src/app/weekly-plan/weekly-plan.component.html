@@ -134,7 +134,7 @@
 
             <div class="variation-grid">
               @for (dimension of item.meal.variation_dimensions; track dimension.id) {
-                <div class="field compact variation-tone" [ngClass]="variationToneClass(dimension)">
+                <div class="field compact variation-tone" [ngClass]="variationToneClass(dimension)" [ngStyle]="variationToneStyle(dimension)">
                   <span>{{ dimension.name }}</span>
                   <mat-form-field appearance="outline">
                     <mat-select

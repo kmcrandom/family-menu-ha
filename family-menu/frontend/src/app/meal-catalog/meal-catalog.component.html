@@ -83,7 +83,7 @@
           <div>
             <h2>{{ selected.name }}</h2>
             <p>
-              {{ selected.variation_dimensions.length }} variation dimensions ·
+              {{ activeDimensions.length }} variation dimensions ·
               {{ isEditing ? 'Editing' : 'Read only' }}
             </p>
           </div>
@@ -94,14 +94,22 @@
               </a>
             }
             @if (!isEditing) {
+              <button mat-stroked-button type="button" (click)="archiveMeal()">
+                <mat-icon>{{ selected.status === 'active' ? 'archive' : 'unarchive' }}</mat-icon>
+                {{ selected.status === 'active' ? 'Archive' : 'Restore' }}
+              </button>
               <button mat-flat-button class="accent-action" type="button" (click)="startEditing()" aria-label="Edit selected meal">
                 <mat-icon>edit</mat-icon>
                 Edit
               </button>
             } @else {
-              <button mat-stroked-button type="button" (click)="archiveMeal()">
-                <mat-icon>{{ selected.status === 'active' ? 'archive' : 'unarchive' }}</mat-icon>
-                {{ selected.status === 'active' ? 'Archive' : 'Restore' }}
+              <button mat-flat-button class="accent-action" type="button" (click)="saveMeal()" [disabled]="saving">
+                <mat-icon>save</mat-icon>
+                Save
+              </button>
+              <button mat-stroked-button type="button" (click)="cancelEditing()" [disabled]="saving">
+                <mat-icon>close</mat-icon>
+                Cancel
               </button>
             }
           </div>
@@ -116,21 +124,7 @@
           <mat-form-field class="short" appearance="outline"><mat-label>Leftovers</mat-label><input matInput type="number" min="0" max="100" formControlName="leftover_quality" /></mat-form-field>
           <mat-form-field class="medium" appearance="outline"><mat-label>Leftover style</mat-label><input matInput formControlName="leftover_style" /></mat-form-field>
           <mat-form-field class="medium" appearance="outline"><mat-label>Source name</mat-label><input matInput formControlName="source_name" /></mat-form-field>
-          <div class="large source-url-row">
-            <mat-form-field appearance="outline"><mat-label>Source URL</mat-label><input matInput formControlName="source_url" /></mat-form-field>
-            @if (sourceUrlValue()) {
-              <a
-                mat-icon-button
-                [href]="sourceUrlValue()"
-                target="_blank"
-                rel="noopener noreferrer"
-                matTooltip="Open source URL"
-                aria-label="Open source URL"
-              >
-                <mat-icon>open_in_new</mat-icon>
-              </a>
-            }
-          </div>
+          <mat-form-field class="large" appearance="outline"><mat-label>Source URL</mat-label><input matInput formControlName="source_url" /></mat-form-field>
           <mat-form-field class="wide" appearance="outline">
             <mat-label>Labels</mat-label>
             <textarea matInput rows="2" formControlName="tags_text"></textarea>
@@ -152,41 +146,113 @@
             <mat-hint>One short step per line. These appear in the Weekly Plan instructions popup.</mat-hint>
           </mat-form-field>
           <mat-form-field class="wide" appearance="outline"><mat-label>Notes</mat-label><textarea matInput rows="2" formControlName="notes"></textarea></mat-form-field>
-          @if (isEditing) {
-          <div class="form-actions">
-            <button mat-flat-button class="accent-action" type="submit" [disabled]="saving">
-              <mat-icon>save</mat-icon>
-              Save Meal
-            </button>
-            <button mat-stroked-button type="button" (click)="cancelEditing()" [disabled]="saving">
-              <mat-icon>close</mat-icon>
-              Cancel
-            </button>
-          </div>
-          }
         </form>
 
+        @if (isEditing) {
+          <div class="dimension-add-panel">
+            <div>
+              <h3>Add variation</h3>
+              <p>Reuse a variation type from the catalog, or create a new one.</p>
+            </div>
+
+            <div class="dimension-add-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Variation type</mat-label>
+                <mat-select [ngModel]="newDimensionKey" (ngModelChange)="selectNewDimensionType($event)">
+                  @for (type of reusableVariationTypes; track type.key) {
+                    <mat-option [value]="type.key">{{ type.name }}</mat-option>
+                  }
+                  <mat-option [value]="customDimensionKey">New variation type</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input matInput [(ngModel)]="newDimensionName" />
+              </mat-form-field>
+
+              @if (newDimensionKey === customDimensionKey) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Key</mat-label>
+                  <input matInput [(ngModel)]="newDimensionCustomKey" placeholder="variation_custom_type" />
+                </mat-form-field>
+              }
+
+              <mat-checkbox [(ngModel)]="newDimensionRequired">Required</mat-checkbox>
+            </div>
+
+            <div class="color-picker-row" aria-label="Variation color">
+              @for (color of availableMaterialColors; track color) {
+                <button
+                  class="color-swatch"
+                  type="button"
+                  [class.selected]="newDimensionColor === color"
+                  [style.background]="color"
+                  (click)="newDimensionColor = color"
+                  [attr.aria-label]="'Use color ' + color"
+                ></button>
+              }
+              <label class="custom-color">
+                <span>Custom</span>
+                <input type="color" [(ngModel)]="newDimensionColor" />
+              </label>
+            </div>
+
+            <button mat-flat-button class="accent-action" type="button" (click)="addDimension()" [disabled]="!newDimensionKey || !newDimensionName.trim()">
+              <mat-icon>add</mat-icon>
+              Add variation
+            </button>
+          </div>
+        }
+
         <div class="dimension-stack">
-          @for (dimension of selected.variation_dimensions; track dimension.id) {
-            <mat-card class="dimension variation-tone" [ngClass]="variationToneClass(dimension)">
+          @for (dimension of activeDimensions; track dimension.id) {
+            <mat-card class="dimension variation-tone" [ngClass]="variationToneClass(dimension)" [ngStyle]="variationToneStyle(dimension)">
               <div class="dimension-head">
                 <div>
                   <h3>{{ dimension.name }}</h3>
                   <p>{{ dimension.key }} · {{ dimension.required ? 'required' : 'optional' }}</p>
                 </div>
-                <mat-checkbox
-                  class="small"
-                  [ngModel]="dimension.required"
-                  [disabled]="!isEditing"
-                  (ngModelChange)="updateDimension(dimension, { required: $event })"
-                >
-                  Required
-                </mat-checkbox>
+                <div class="dimension-actions">
+                  @if (isEditing) {
+                    <div class="color-picker-row compact" aria-label="Dimension color">
+                      @for (color of availableMaterialColors; track color) {
+                        <button
+                          class="color-swatch"
+                          type="button"
+                          [class.selected]="dimension.color === color"
+                          [style.background]="color"
+                          (click)="updateDimension(dimension, { color })"
+                          [attr.aria-label]="'Use color ' + color + ' for ' + dimension.name"
+                        ></button>
+                      }
+                      <input
+                        class="inline-color-input"
+                        type="color"
+                        [ngModel]="dimension.color || fallbackColorForKey(dimension.key)"
+                        (change)="updateDimension(dimension, { color: $any($event.target).value })"
+                        [attr.aria-label]="'Choose custom color for ' + dimension.name"
+                      />
+                    </div>
+                    <mat-checkbox
+                      class="small"
+                      [ngModel]="dimension.required"
+                      (ngModelChange)="updateDimension(dimension, { required: $event })"
+                    >
+                      Required
+                    </mat-checkbox>
+                    <button mat-icon-button type="button" (click)="archiveDimension(dimension)" matTooltip="Remove variation" [attr.aria-label]="'Remove ' + dimension.name">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  } @else {
+                    <span class="dimension-state">{{ dimension.required ? 'required' : 'optional' }}</span>
+                  }
+                </div>
               </div>
 
               <div class="option-list">
                 @for (option of dimension.options; track option.id) {
-                  <div class="option-editor variation-tone" [ngClass]="variationToneClass(dimension)" [class.archived]="option.status === 'archived'">
+                  <div class="option-editor variation-tone" [ngClass]="variationToneClass(dimension)" [ngStyle]="variationToneStyle(dimension)" [class.archived]="option.status === 'archived'">
                     <div class="option-row">
                       <mat-form-field class="option-name medium" appearance="outline">
                         <mat-label>Option</mat-label>

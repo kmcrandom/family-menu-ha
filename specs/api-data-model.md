@@ -69,8 +69,18 @@ Fields:
 - `key`: stable semantic key such as `variation_primary_protein`, `variation_diet_protein`, `variation_starch_or_base`, `variation_sauce`, `variation_vegetables`, `variation_base`, `variation_prep_method`, or `variation_toppings`.
 - `selection_mode`: initially `single`; future-compatible with `multi`.
 - `required`: whether a weekly plan should select an option from this dimension.
+- `color`: optional user-selected color token or custom color value used to visually identify this dimension across Meal Catalog and Weekly Plan. Existing dimensions without a stored color should continue to receive the stable semantic fallback color derived from `key`.
 - `display_order`.
 - `status`: `active` or `archived`.
+
+Variation dimensions should support reuse and user-defined types:
+
+- Existing dimension keys and names used anywhere in the catalog should be available as reusable variation type suggestions when adding a dimension to another meal.
+- Reusable suggestions should include common built-in concepts such as primary protein, diet-compatible or pescatarian protein, vegetables, sauce, starch/base, toppings, and prep method when those concepts exist in the catalog or starter defaults.
+- A meal should not offer reusable variation type suggestions for active dimensions it already has.
+- Custom variation types should store a stable generated `key`, a display `name`, and an optional color.
+- Removing a variation dimension from a meal should archive it by default rather than hard-deleting it, so existing weekly plans and history remain understandable. A future destructive delete may exist only behind explicit confirmation and should not be the default.
+- Archived variation dimensions should be omitted from new recommendations and ordinary add-type suggestion filtering, but remain available for historical plans and restore flows.
 
 ### Meal Variation Option
 

@@ -6,6 +6,13 @@ import { ApiService } from '../core/api.service';
 import { IngredientItem, IngredientValue, Meal, VariationDimension, VariationOption } from '../core/models';
 import { MATERIAL_IMPORTS } from '../shared/material';
 
+interface VariationTypeChoice {
+  key: string;
+  name: string;
+  color: string;
+  builtIn?: boolean;
+}
+
 @Component({
   selector: 'app-meal-catalog',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MATERIAL_IMPORTS],
@@ -25,6 +32,29 @@ export class MealCatalogComponent {
   saving = false;
   isEditing = false;
   newOptionNames: Record<string, string> = {};
+  newDimensionKey = '';
+  newDimensionName = '';
+  newDimensionCustomKey = '';
+  newDimensionRequired = false;
+  newDimensionColor = '';
+
+  readonly customDimensionKey = '__custom__';
+  readonly materialColors = [
+    '#f44336', '#e91e63', '#9c27b0', '#673ab7',
+    '#3f51b5', '#2196f3', '#03a9f4', '#009688',
+    '#4caf50', '#8bc34a', '#ffc107', '#ff9800',
+    '#ff5722', '#795548', '#607d8b',
+  ];
+
+  readonly builtInVariationTypes: VariationTypeChoice[] = [
+    { key: 'variation_primary_protein', name: 'Primary protein', color: '#f44336', builtIn: true },
+    { key: 'variation_diet_protein', name: 'Pescatarian protein', color: '#009688', builtIn: true },
+    { key: 'variation_vegetables', name: 'Vegetables', color: '#4caf50', builtIn: true },
+    { key: 'variation_sauce', name: 'Sauce', color: '#ffc107', builtIn: true },
+    { key: 'variation_starch_or_base', name: 'Starch/base', color: '#3f51b5', builtIn: true },
+    { key: 'variation_toppings', name: 'Toppings', color: '#e91e63', builtIn: true },
+    { key: 'variation_prep_method', name: 'Prep method', color: '#607d8b', builtIn: true },
+  ];
 
   readonly mealForm = this.fb.group({
     name: [''],
@@ -78,6 +108,42 @@ export class MealCatalogComponent {
     return [...tags].sort((a, b) => a.localeCompare(b));
   }
 
+  get activeDimensions(): VariationDimension[] {
+    return this.selected?.variation_dimensions.filter((dimension) => dimension.status === 'active') ?? [];
+  }
+
+  get reusableVariationTypes(): VariationTypeChoice[] {
+    const activeKeys = new Set(this.activeDimensions.map((dimension) => dimension.key));
+    const byKey = new Map<string, VariationTypeChoice>();
+    for (const type of this.builtInVariationTypes) {
+      byKey.set(type.key, type);
+    }
+    for (const meal of this.meals) {
+      for (const dimension of meal.variation_dimensions) {
+        if (dimension.status === 'archived') continue;
+        if (!byKey.has(dimension.key)) {
+          byKey.set(dimension.key, {
+            key: dimension.key,
+            name: dimension.name,
+            color: dimension.color || this.fallbackColorForKey(dimension.key),
+          });
+        }
+      }
+    }
+    return [...byKey.values()]
+      .filter((type) => !activeKeys.has(type.key))
+      .sort((a, b) => Number(Boolean(b.builtIn)) - Number(Boolean(a.builtIn)) || a.name.localeCompare(b.name));
+  }
+
+  get usedDimensionColors(): Set<string> {
+    return new Set(this.activeDimensions.map((dimension) => this.normalizeColor(dimension.color)).filter(Boolean));
+  }
+
+  get availableMaterialColors(): string[] {
+    const used = this.usedDimensionColors;
+    return this.materialColors.filter((color) => !used.has(this.normalizeColor(color)));
+  }
+
   load(selectId?: string, editAfterLoad = false): void {
     this.api.getMeals(true).subscribe({
       next: (meals) => {
@@ -112,6 +178,7 @@ export class MealCatalogComponent {
       instructions_text: this.linesToText(meal.instructions),
       notes: meal.notes ?? '',
     });
+    this.resetNewDimension();
     this.syncFormMode();
   }
 
@@ -156,7 +223,8 @@ export class MealCatalogComponent {
   }
 
   archiveMeal(): void {
-    if (!this.selected || !this.isEditing) return;
+    if (!this.selected || this.isEditing) return;
+    if (this.selected.status === 'active' && !window.confirm(`Archive ${this.selected.name}?`)) return;
     const action = this.selected.status === 'active' ? this.api.archiveMeal(this.selected.id) : this.api.restoreMeal(this.selected.id);
     action.subscribe({
       next: (meal) => this.load(meal.id),
@@ -218,6 +286,56 @@ export class MealCatalogComponent {
     });
   }
 
+  selectNewDimensionType(key: string): void {
+    this.newDimensionKey = key;
+    if (key === this.customDimensionKey) {
+      this.newDimensionName = '';
+      this.newDimensionCustomKey = '';
+      this.newDimensionColor = this.availableMaterialColors[0] ?? '#9e9e9e';
+      return;
+    }
+    const choice = this.reusableVariationTypes.find((type) => type.key === key);
+    if (!choice) return;
+    this.newDimensionName = choice.name;
+    this.newDimensionCustomKey = choice.key;
+    this.newDimensionColor = this.availableMaterialColors.includes(choice.color)
+      ? choice.color
+      : this.availableMaterialColors[0] ?? choice.color;
+  }
+
+  addDimension(): void {
+    if (!this.selected || !this.isEditing || !this.newDimensionKey) return;
+    const name = this.newDimensionName.trim();
+    if (!name) return;
+    const key = this.newDimensionKey === this.customDimensionKey
+      ? this.normalizeDimensionKey(this.newDimensionCustomKey || name)
+      : this.newDimensionKey;
+    this.api.createDimension(this.selected.id, {
+      key,
+      name,
+      selection_mode: 'single',
+      required: this.newDimensionRequired,
+      display_order: this.activeDimensions.length,
+      color: this.newDimensionColor || null,
+    }).subscribe({
+      next: () => {
+        this.resetNewDimension();
+        this.load(this.selected?.id, true);
+      },
+      error: () => this.fail('Unable to add variation.'),
+    });
+  }
+
+  archiveDimension(dimension: VariationDimension): void {
+    if (!this.isEditing) return;
+    const suffix = dimension.options.length ? ` This also hides ${dimension.options.length} options from future suggestions.` : '';
+    if (!window.confirm(`Remove ${dimension.name} from this meal?${suffix}`)) return;
+    this.api.archiveDimension(dimension.id).subscribe({
+      next: () => this.load(this.selected?.id, true),
+      error: () => this.fail('Unable to remove variation.'),
+    });
+  }
+
   selectTag(tag: string): void {
     this.selectedTag = this.selectedTag === tag ? '' : tag;
   }
@@ -235,6 +353,7 @@ export class MealCatalogComponent {
   }
 
   variationToneClass(dimension: VariationDimension): string {
+    if (dimension.color) return 'variation-tone-custom';
     const key = dimension.key.toLowerCase();
     if (key.includes('primary_protein')) return 'variation-tone-primary-protein';
     if (key.includes('diet_protein') || key.includes('pescatarian')) return 'variation-tone-diet-protein';
@@ -246,12 +365,56 @@ export class MealCatalogComponent {
     return 'variation-tone-neutral';
   }
 
+  variationToneStyle(dimension: VariationDimension): Record<string, string> {
+    if (!dimension.color) return {};
+    const color = dimension.color;
+    return {
+      '--tone-border': color,
+      '--tone-bg': `color-mix(in srgb, ${color} 18%, var(--surface-2))`,
+      '--tone-text': `color-mix(in srgb, ${color} 55%, var(--text))`,
+    };
+  }
+
+  fallbackColorForKey(key: string): string {
+    const normalized = key.toLowerCase();
+    if (normalized.includes('primary_protein')) return '#f44336';
+    if (normalized.includes('diet_protein') || normalized.includes('pescatarian')) return '#009688';
+    if (normalized.includes('vegetable')) return '#4caf50';
+    if (normalized.includes('sauce')) return '#ffc107';
+    if (normalized.includes('starch') || normalized.includes('base') || normalized.includes('pasta')) return '#3f51b5';
+    if (normalized.includes('topping')) return '#e91e63';
+    if (normalized.includes('prep')) return '#607d8b';
+    return '#9e9e9e';
+  }
+
   private valueForDimension(key: string, name: string): Record<string, string> | string[] {
     const normalized = key.replace('variation_', '');
     if (normalized === 'vegetables') {
       return name.split(',').map((item) => item.trim()).filter(Boolean);
     }
     return { [normalized]: name };
+  }
+
+  private resetNewDimension(): void {
+    this.newDimensionKey = '';
+    this.newDimensionName = '';
+    this.newDimensionCustomKey = '';
+    this.newDimensionRequired = false;
+    this.newDimensionColor = this.availableMaterialColors[0] ?? '#9e9e9e';
+  }
+
+  private normalizeDimensionKey(value: string): string {
+    const slug = value
+      .trim()
+      .toLowerCase()
+      .replace(/^variation[_-]?/, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+    return `variation_${slug || 'custom'}`;
+  }
+
+  private normalizeColor(value?: string | null): string {
+    return String(value ?? '').trim().toLowerCase();
   }
 
   linesToText(values: string[] = []): string {

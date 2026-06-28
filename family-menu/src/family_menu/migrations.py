@@ -52,6 +52,7 @@ def init_db(conn: sqlite3.Connection) -> None:
           required INTEGER NOT NULL DEFAULT 0,
           display_order INTEGER NOT NULL DEFAULT 0,
           status TEXT NOT NULL DEFAULT 'active',
+          color TEXT,
           user_modified INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL
@@ -199,6 +200,8 @@ def _ensure_columns(conn: sqlite3.Connection) -> None:
     _add_column_if_missing(conn, meal_columns, "meals", "simple_serving_variations", "TEXT NOT NULL DEFAULT '[]'")
     _add_column_if_missing(conn, meal_columns, "meals", "source_url", "TEXT")
     _add_column_if_missing(conn, meal_columns, "meals", "source_name", "TEXT")
+    dimension_columns = _table_columns(conn, "variation_dimensions")
+    _add_column_if_missing(conn, dimension_columns, "variation_dimensions", "color", "TEXT")
     option_columns = _table_columns(conn, "variation_options")
     _add_column_if_missing(conn, option_columns, "variation_options", "diet_tags", "TEXT NOT NULL DEFAULT '[]'")
     _add_column_if_missing(

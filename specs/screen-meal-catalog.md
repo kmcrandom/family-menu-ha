@@ -38,9 +38,11 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Archive or restore meal.
 - Adjust likability.
 - Add or edit variation dimensions and options.
+- Add or remove variation dimensions while editing.
 - Import starter catalog.
 - Export catalog.
 - Open source link.
+- Cancel meal edits.
 - Open label/tag filters from the search area.
 - Select or clear label/tag filters.
 
@@ -48,8 +50,13 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 
 - Selecting an existing meal should open the Meal Catalog detail in read-only view mode by default.
 - Read-only view mode should show the selected meal's details, grocery-impacting fields, Sunday prep tasks, source link, instructions, variation dimensions, and variation options without allowing accidental field edits.
-- Read-only view mode should provide a clear Edit action, preferably an icon button with an accessible label, that switches the selected meal detail into edit mode.
-- Edit mode should expose the existing meal editing controls and save/archive/restore actions.
+- Read-only view mode should provide a clear top action area with Archive or Restore and Edit actions.
+- Archive or Restore should be available while not editing and hidden while editing.
+- Archiving a meal should require a popup confirmation before the archive action is sent.
+- Restoring an archived meal does not require confirmation.
+- Edit mode should expose the existing meal editing controls and replace the read-only actions with Save and Cancel in the same top action area.
+- Save should persist meal edits from the top action area.
+- Cancel should exit edit mode and restore the form to the selected meal's saved values without saving.
 - Switching to a different existing meal should return the detail pane to read-only view mode for that meal.
 - Creating a meal or duplicating a meal should open the resulting meal in edit mode so the user can immediately fill in or adjust fields.
 - If the user has unsaved edits and attempts to leave edit mode or select another meal, the app should either preserve the local draft until saved or clearly confirm discarding changes.
@@ -67,11 +74,21 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Shared ingredient amounts should be visible and editable on the meal without editing JSON.
 - Meal-level Sunday prep tasks should be visible and editable on the meal.
 - Meal source URL and optional source name should be visible and editable on the meal.
-- The source URL editor should include a compact button or icon action beside the URL field to open the link in a new tab when the field has a value.
+- The selected meal header should include the source-link open action when a source URL exists.
+- The source URL editor should not include a second open-source icon beside the URL field because the same action is already available in the selected meal header.
 - Meal instructions should be visible and editable on the meal.
 - Instructions should be line-based or otherwise structured enough for the Weekly Plan instructions dialog to show scannable steps.
-- Variation dimensions should be easy to add without duplicating the whole meal.
+- Variation dimensions should be easy to add and remove while editing without duplicating the whole meal.
+- Adding a variation dimension while editing should show reusable variation types that have been used before in the catalog, such as primary protein, pescatarian or diet-compatible protein, vegetables, sauce, starch/base, toppings, or prep method.
+- Reusable variation type suggestions should filter out active variation dimensions already present on the selected meal.
+- Adding a variation dimension should also offer a custom variation type path where the user can enter a new display name, generate or edit a stable key, and choose a color.
+- Removing a variation dimension from a meal should archive that dimension by default and remove it from new recommendations while preserving historical plans and usage. The UI should use clear remove/archive language and confirmation when removal affects existing options.
 - A dimension can represent primary protein, diet-compatible protein, vegetable mix, sauce, starch/base, pasta shape, prep method, or toppings.
+- Variation dimensions should expose their color while editing.
+- Variation color selection should show a preset palette of Material Design colors suitable for the app's muted dark UI.
+- Preset color choices already used by active variation dimensions on the selected meal should be filtered out or disabled.
+- The color selector should also include a custom color picker for households that need a color outside the preset palette.
+- Custom colors should remain readable in dark mode and should not be the only cue for identifying a variation dimension.
 - Each option within a dimension should have its own likability, active/archive state, tags, diet compatibility tags, and optional prep/cook/leftover overrides.
 - Each option should expose editable ingredient additions, ingredient omissions, and prep-ahead tasks because selected options directly shape Grocery and Prep.
 - Option ingredient additions should include editable amounts and units.
@@ -115,6 +132,10 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Selecting an existing meal opens the detail pane in read-only mode by default.
 - The selected meal cannot be changed until the user activates the Edit action.
 - Activating Edit switches the selected meal detail into editable controls without changing the selected meal.
+- Read-only mode shows Archive or Restore and Edit actions in the selected meal header.
+- Activating Archive from read-only mode opens a confirmation popup before archiving the selected meal.
+- Edit mode shows Save and Cancel actions in the selected meal header, and hides Archive or Restore.
+- Canceling edit mode discards unsaved form changes and returns to read-only mode for the selected meal.
 - Selecting another existing meal exits edit mode and shows the newly selected meal read-only, unless unsaved edits require a discard/preserve flow.
 - Creating or duplicating a meal opens the new meal in edit mode.
 - A user can change a meal's likability and see it affect future scoring.
@@ -133,12 +154,17 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - After a full local source refresh, prep and cook time fields are updated from source data where available.
 - A user can edit meal-level prep-ahead tasks and see those changes reflected in Sunday Prep for weeks containing that meal.
 - A user can edit a meal source URL and see that link on both Meal Catalog and Weekly Plan.
-- A user can open the currently selected meal's source URL directly from the source URL field area.
+- A user can open the currently selected meal's source URL directly from the selected meal header.
+- The Source URL form field does not show a duplicate open-source icon button.
 - A user can edit meal cooking instructions and open them from Weekly Plan.
 - A user can edit variation-option ingredient additions and prep-ahead tasks and see those changes reflected when that option is selected in a weekly plan.
 - A user can edit variation-option ingredient amounts and see those amounts reflected when that option is selected in a weekly plan.
 - Locally enriched variation-option ingredient amounts appear in the option editor and affect Grocery and Prep when that option is selected.
 - Variation dimensions use consistent muted colors that match Weekly Plan for the same dimension key.
+- A user can add an existing reusable variation type to a meal while editing, and the list excludes variation types already active on that meal.
+- A user can add a brand new variation type with a chosen preset Material Design color or a custom color.
+- Color choices already used by active variation dimensions on the selected meal are not offered as duplicate preset choices.
+- A user can remove a variation dimension from a meal while editing, and it no longer appears for new planning suggestions while historical data remains intact.
 - A user can edit meal and option diet tags so common-compatible mode can filter suggestions correctly.
 - A user can archive a meal without breaking old weekly plans or history.
 - A user can find all high-likability meals quickly.

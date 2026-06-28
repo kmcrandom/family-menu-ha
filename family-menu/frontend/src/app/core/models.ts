@@ -35,6 +35,7 @@ export interface VariationDimension {
   required: boolean;
   display_order: number;
   status: 'active' | 'archived';
+  color?: string | null;
   options: VariationOption[];
 }
 

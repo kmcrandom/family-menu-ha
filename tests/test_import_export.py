@@ -98,3 +98,29 @@ def test_import_rolls_back_invalid_linked_data(client):
 
     assert response.status_code == 400
     assert client.get(f"/api/v1/meals/{original_meal['id']}").json()["name"] == original_meal["name"]
+
+
+def test_import_export_preserves_variation_dimension_color(client):
+    created = client.post(
+        "/api/v1/meals/sample-build-your-own-bowl/variation-dimensions",
+        json={"key": "variation_toppings", "name": "Toppings", "color": "#03a9f4"},
+    ).json()
+
+    exported = client.get("/api/v1/export").json()
+    exported_dimension = next(
+        dimension
+        for meal in exported["meals"]
+        for dimension in meal["variation_dimensions"]
+        if dimension["id"] == created["id"]
+    )
+    assert exported_dimension["color"] == "#03a9f4"
+
+    client.patch(f"/api/v1/variation-dimensions/{created['id']}", json={"color": "#ff5722"})
+    response = client.post("/api/v1/import", json={"data": exported, "confirm_overwrite": True})
+
+    assert response.status_code == 200
+    restored = client.get("/api/v1/meals/sample-build-your-own-bowl").json()
+    restored_dimension = next(
+        dimension for dimension in restored["variation_dimensions"] if dimension["id"] == created["id"]
+    )
+    assert restored_dimension["color"] == "#03a9f4"

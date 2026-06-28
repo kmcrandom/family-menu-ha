@@ -395,6 +395,7 @@ export class WeeklyPlanComponent {
   }
 
   variationToneClass(dimension: VariationDimension): string {
+    if (dimension.color) return 'variation-tone-custom';
     const key = dimension.key.toLowerCase();
     if (key.includes('primary_protein')) return 'variation-tone-primary-protein';
     if (key.includes('diet_protein') || key.includes('pescatarian')) return 'variation-tone-diet-protein';
@@ -404,6 +405,16 @@ export class WeeklyPlanComponent {
     if (key.includes('topping')) return 'variation-tone-toppings';
     if (key.includes('prep')) return 'variation-tone-prep';
     return 'variation-tone-neutral';
+  }
+
+  variationToneStyle(dimension: VariationDimension): Record<string, string> {
+    if (!dimension.color) return {};
+    const color = dimension.color;
+    return {
+      '--tone-border': color,
+      '--tone-bg': `color-mix(in srgb, ${color} 18%, var(--surface-2))`,
+      '--tone-text': `color-mix(in srgb, ${color} 55%, var(--text))`,
+    };
   }
 
   private patch(item: PlannedMeal, payload: Partial<PlannedMeal>): void {
