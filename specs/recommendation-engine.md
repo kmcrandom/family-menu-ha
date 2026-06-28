@@ -36,6 +36,7 @@ The recommendation engine suggests five distinct dinners for a planning week. It
 
 - Prefer underused meals relative to their likability.
 - Prefer underused variation options relative to their likability after a top-level meal is selected.
+- On explicit regeneration, add a small amount of controlled randomness among close, high-scoring candidates so repeated clicks can explore alternatives without ignoring the recommendation score.
 - Prefer meals not eaten recently.
 - Prefer variation options not used recently when several options are available for a meal.
 - Prefer meals with strong make-ahead scores for busier weeks.
@@ -57,6 +58,8 @@ The first implementation should use a transparent weighted score:
 The expected frequency for a meal should be proportional to likability across active meals. For example, a meal with likability 90 should naturally appear more often than a meal with likability 50, but both should still be considered if the higher-likability meal has been eaten repeatedly.
 
 Variation scoring should use the same idea within each independent dimension of a meal. If a shared-base meal is selected, the primary protein dimension can score default options separately from a diet-compatible protein dimension, and sauce/base/vegetable dimensions can still be scored independently. This keeps a frequent meal from hiding underused compatible options.
+
+When a user explicitly regenerates unlocked meals, the engine should still score all eligible meals and variation options first, then randomly choose from a small top-ranked candidate window. The candidate window should include only strong alternatives, such as the top few ranked candidates and/or candidates within a modest score distance of the best option. Locked meals and locked variation dimensions must not be randomized. The randomness should be local to generation, require no persisted seed or schema change, and should never bypass hard constraints such as active status, vacation dates, weekly duplicate prevention, or dietary compatibility.
 
 ## Dietary Compatibility
 
@@ -86,9 +89,9 @@ Each suggestion should expose reason codes for the UI, such as:
 
 - Replacing a meal should show eligible top-level meal alternatives sorted by recommendation score.
 - Swapping a variation option should show eligible options within the same meal and dimension sorted by recommendation score.
-- Regenerating a plan should preserve locked meals and fill only unlocked slots.
+- Regenerating a plan should preserve locked meals and fill only unlocked slots, using controlled randomness among top-ranked candidates so unlocked slots can change even when scores and history have not changed.
 - Regenerating a plan should delete unlocked planned meals that fall on vacation dates and should not refill those dates.
-- Regenerating variation options should optionally preserve top-level meals and refill only unlocked dimensions.
+- Regenerating variation options should optionally preserve top-level meals and refill only unlocked dimensions, using controlled randomness among top-ranked options when multiple strong options are available.
 - The planner can choose a lower-scored meal without penalty; history should record what was actually eaten.
 
 ## Edge Cases
@@ -104,8 +107,9 @@ Each suggestion should expose reason codes for the UI, such as:
 
 ## Acceptance Criteria
 
-- Repeated generation for the same inputs is stable enough to be understandable.
+- Repeated generation for the same inputs is score-driven and bounded enough to be understandable, but explicit regeneration of unlocked meals can produce a different valid plan without history changes.
 - Locked meals survive regeneration.
+- Locked variation dimensions survive regeneration.
 - A high-likability meal can appear more often across months than a lower-likability meal.
 - A high-likability variation option can appear more often within its parent meal and dimension than a lower-likability option.
 - No meal appears twice in the same generated week.

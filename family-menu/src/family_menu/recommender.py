@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import random
 from datetime import date, timedelta
 from math import inf
-from typing import Any
+from typing import Any, TypeVar
 
 from .store import Store
+
+ScoredCandidate = TypeVar("ScoredCandidate", bound=tuple)
+RANDOM_CANDIDATE_LIMIT = 3
+RANDOM_SCORE_WINDOW = 12
 
 
 def generate_plan(
@@ -69,7 +74,7 @@ def generate_plan(
             meal_scores.append((score, meal["name"], meal, reasons))
         if not meal_scores:
             break
-        _, _, selected_meal, reasons = sorted(meal_scores, key=lambda item: (-item[0], item[1]))[0]
+        _, _, selected_meal, reasons = choose_ranked_candidate(meal_scores)
         variation_selections, option_reasons = choose_variation_options(
             selected_meal,
             stats,
@@ -171,7 +176,7 @@ def choose_variation_options(
             )
             for option in options
         ]
-        _, _, selected = sorted(scored, key=lambda item: (-item[0], item[1]))[0]
+        _, _, selected = choose_ranked_candidate(scored)
         selections[dimension["id"]] = selected["id"]
         if selected["likability"] >= 85:
             reasons.append("variation_option_high_likability")
@@ -189,6 +194,24 @@ def score_option(option: dict, stats: dict, planned_date: date) -> float:
     recency_score = 100 if days_since is inf else min(100, max(0, days_since * 6))
     frequency_score = max(0, 100 - count * 22)
     return option["likability"] * 0.42 + frequency_score * 0.30 + recency_score * 0.28
+
+
+def choose_ranked_candidate(candidates: list[ScoredCandidate]) -> ScoredCandidate:
+    ranked = sorted(candidates, key=lambda item: (-item[0], item[1]))
+    window = top_candidate_window(ranked)
+    return random.choice(window)
+
+
+def top_candidate_window(ranked_candidates: list[ScoredCandidate]) -> list[ScoredCandidate]:
+    if not ranked_candidates:
+        return []
+    best_score = ranked_candidates[0][0]
+    return [
+        candidate
+        for index, candidate in enumerate(ranked_candidates)
+        if index < RANDOM_CANDIDATE_LIMIT
+        and candidate[0] >= best_score - RANDOM_SCORE_WINDOW
+    ]
 
 
 def existing_for_position(existing: list[dict], position: int) -> dict | None:
