@@ -825,13 +825,6 @@ select {
   grid-column: span 6;
 }
 
-.source-url-row {
-  align-items: start;
-  display: grid;
-  gap: 6px;
-  grid-template-columns: minmax(0, 1fr) 44px;
-}
-
 .field.wide,
 .form-grid > .wide,
 .form-grid > .full,
@@ -866,6 +859,75 @@ select {
   gap: 10px;
 }
 
+.dimension-add-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.dimension-add-panel p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.dimension-add-grid {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+}
+
+.color-picker-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.color-picker-row.compact {
+  gap: 5px;
+  justify-content: flex-end;
+  max-width: 210px;
+}
+
+.color-swatch {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  width: 26px;
+}
+
+.color-swatch.selected {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.custom-color {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 750;
+  gap: 7px;
+}
+
+.custom-color input,
+.inline-color-input {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  height: 30px;
+  padding: 2px;
+  width: 38px;
+}
+
 .dimension {
   background: var(--tone-bg, var(--surface-2));
   border: 1px solid var(--tone-border, var(--border));
@@ -873,6 +935,21 @@ select {
   display: grid;
   gap: 10px;
   padding: 12px;
+}
+
+.dimension-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dimension-state {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .option-list {
@@ -1087,6 +1164,11 @@ select {
   --tone-text: #d5dde0;
 }
 
+.variation-tone-custom {
+  --tone-bg: color-mix(in srgb, var(--tone-border) 18%, var(--surface-2));
+  --tone-text: color-mix(in srgb, var(--tone-border) 55%, var(--text));
+}
+
 .history-grid {
   grid-template-columns: minmax(320px, 0.7fr) minmax(0, 1.3fr);
 }
@@ -1165,6 +1247,7 @@ select {
   .form-grid.one,
   .option-row,
   .option-detail,
+  .dimension-add-grid,
   .mini-editor,
   .add-profile {
     grid-template-columns: 1fr;

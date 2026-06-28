@@ -54,6 +54,10 @@ export class ApiService {
     return this.http.post<VariationOption>(this.apiUrl(`variation-dimensions/${dimensionId}/options`), payload);
   }
 
+  createDimension(mealId: string, payload: Partial<VariationDimension>): Observable<VariationDimension> {
+    return this.http.post<VariationDimension>(this.apiUrl(`meals/${mealId}/variation-dimensions`), payload);
+  }
+
   patchOption(id: string, payload: Partial<VariationOption>): Observable<VariationOption> {
     return this.http.patch<VariationOption>(this.apiUrl(`variation-options/${id}`), payload);
   }
@@ -68,6 +72,14 @@ export class ApiService {
 
   patchDimension(id: string, payload: Partial<VariationDimension>): Observable<VariationDimension> {
     return this.http.patch<VariationDimension>(this.apiUrl(`variation-dimensions/${id}`), payload);
+  }
+
+  archiveDimension(id: string): Observable<VariationDimension> {
+    return this.http.post<VariationDimension>(this.apiUrl(`variation-dimensions/${id}/archive`), {});
+  }
+
+  restoreDimension(id: string): Observable<VariationDimension> {
+    return this.http.post<VariationDimension>(this.apiUrl(`variation-dimensions/${id}/restore`), {});
   }
 
   getCurrentPlan(): Observable<WeeklyPlan> {

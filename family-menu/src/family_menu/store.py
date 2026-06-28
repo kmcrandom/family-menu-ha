@@ -498,12 +498,13 @@ class Store:
                         """
                         INSERT INTO variation_dimensions(
                           id, meal_id, key, name, selection_mode, required, display_order,
-                          status, user_modified, created_at, updated_at
+                          status, color, user_modified, created_at, updated_at
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
                         ON CONFLICT(id) DO UPDATE SET
                           name = CASE WHEN variation_dimensions.user_modified = 0 OR ? THEN excluded.name ELSE variation_dimensions.name END,
                           status = excluded.status,
+                          color = CASE WHEN variation_dimensions.user_modified = 0 OR ? THEN excluded.color ELSE variation_dimensions.color END,
                           updated_at = excluded.updated_at
                         """,
                         (
@@ -515,8 +516,10 @@ class Store:
                             1 if dimension.get("required") else 0,
                             dimension.get("display_order", index),
                             dimension.get("status", "active"),
+                            dimension.get("color"),
                             timestamp,
                             timestamp,
+                            1 if overwrite else 0,
                             1 if overwrite else 0,
                         ),
                     )
@@ -576,7 +579,10 @@ class Store:
             query += " WHERE status = ?"
             params = ("active",)
         query += " ORDER BY status, name"
-        return [self.meal_response(row["id"]) for row in self.conn.execute(query, params)]
+        return [
+            self.meal_response(row["id"], include_archived_options=include_archived)
+            for row in self.conn.execute(query, params)
+        ]
 
     def meal_response(self, meal_id: str, include_archived_options: bool = True) -> dict:
         row = self.conn.execute("SELECT * FROM meals WHERE id = ?", (meal_id,)).fetchone()
@@ -684,13 +690,32 @@ class Store:
         self.meal_response(meal_id)
         timestamp = now_iso()
         dimension_id = f"{meal_id}-{slugify(payload.key.replace('variation_', ''))}"
+        existing = self.conn.execute(
+            "SELECT id, status FROM variation_dimensions WHERE id = ?",
+            (dimension_id,),
+        ).fetchone()
+        if existing is not None:
+            if existing["status"] == "archived":
+                return self.patch_dimension(
+                    dimension_id,
+                    VariationDimensionPatch(
+                        key=payload.key,
+                        name=payload.name,
+                        selection_mode=payload.selection_mode,
+                        required=payload.required,
+                        display_order=payload.display_order,
+                        status="active",
+                        color=payload.color,
+                    ),
+                )
+            raise ValueError(f"Variation dimension already exists: {payload.name}")
         self.conn.execute(
             """
             INSERT INTO variation_dimensions(
               id, meal_id, key, name, selection_mode, required, display_order,
-              status, user_modified, created_at, updated_at
+              status, color, user_modified, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?, ?)
             """,
             (
                 dimension_id,
@@ -700,6 +725,7 @@ class Store:
                 payload.selection_mode,
                 1 if payload.required else 0,
                 payload.display_order,
+                payload.color,
                 timestamp,
                 timestamp,
             ),
@@ -1592,9 +1618,9 @@ class Store:
             """
             INSERT INTO variation_dimensions(
               id, meal_id, key, name, selection_mode, required, display_order,
-              status, user_modified, created_at, updated_at
+              status, color, user_modified, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
             """,
             (
                 dimension["id"],
@@ -1605,6 +1631,7 @@ class Store:
                 1 if dimension.get("required") else 0,
                 dimension.get("display_order", index),
                 dimension.get("status", "active"),
+                dimension.get("color"),
                 dimension.get("created_at") or timestamp,
                 dimension.get("updated_at") or timestamp,
             ),

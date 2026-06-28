@@ -93,6 +93,7 @@ class VariationDimension(BaseModel):
     required: bool = False
     display_order: int = 0
     status: Status = "active"
+    color: str | None = None
     options: list[VariationOption] = Field(default_factory=list)
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -152,6 +153,7 @@ class VariationDimensionCreate(BaseModel):
     selection_mode: str = "single"
     required: bool = False
     display_order: int = 0
+    color: str | None = None
 
 
 class VariationDimensionPatch(BaseModel):
@@ -161,6 +163,7 @@ class VariationDimensionPatch(BaseModel):
     required: bool | None = None
     display_order: int | None = None
     status: Status | None = None
+    color: str | None = None
 
 
 class VariationOptionCreate(IngredientListMixin):
