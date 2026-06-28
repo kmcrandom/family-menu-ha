@@ -79,12 +79,15 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Meal instructions should be visible and editable on the meal.
 - Instructions should be line-based or otherwise structured enough for the Weekly Plan instructions dialog to show scannable steps.
 - Variation dimensions should be easy to add and remove while editing without duplicating the whole meal.
-- Adding a variation dimension while editing should show reusable variation types that have been used before in the catalog, such as primary protein, pescatarian or diet-compatible protein, vegetables, sauce, starch/base, toppings, or prep method.
+- The add variation entry point should display under the selected meal's current active variation dimensions, not above them.
+- The variation type, custom name/key, and color controls for adding a variation should not be visible by default. An Add variation button should reveal those controls in an expanded panel or popup.
+- Adding a variation dimension while editing should show reusable variation types that have been used before in the catalog, such as primary protein, pescatarian or diet-compatible protein, vegetables, sauce, starch/base, toppings, or prep method, only after the user activates Add variation.
 - Reusable variation type suggestions should filter out active variation dimensions already present on the selected meal.
 - Adding a variation dimension should also offer a custom variation type path where the user can enter a new display name, generate or edit a stable key, and choose a color.
 - Removing a variation dimension from a meal should archive that dimension by default and remove it from new recommendations while preserving historical plans and usage. The UI should use clear remove/archive language and confirmation when removal affects existing options.
 - A dimension can represent primary protein, diet-compatible protein, vegetable mix, sauce, starch/base, pasta shape, prep method, or toppings.
-- Variation dimensions should expose their color while editing.
+- Variation dimensions should show their current color accent while editing, but the color palette should not be visible inline on existing variation rows by default.
+- Existing variation dimensions should provide a compact icon button with a color dropper icon. Activating it should open a popup for selecting a different color.
 - Variation color selection should show a preset palette of Material Design colors suitable for the app's muted dark UI.
 - Preset color choices already used by active variation dimensions on the selected meal should be filtered out or disabled.
 - The color selector should also include a custom color picker for households that need a color outside the preset palette.
@@ -163,6 +166,8 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Variation dimensions use consistent muted colors that match Weekly Plan for the same dimension key.
 - A user can add an existing reusable variation type to a meal while editing, and the list excludes variation types already active on that meal.
 - A user can add a brand new variation type with a chosen preset Material Design color or a custom color.
+- The Add variation button appears under the current active variation dimensions and keeps variation type, name/key, and color controls hidden until activated.
+- Existing variation dimensions do not show inline color palettes while editing; the color dropper icon opens color selection in a popup.
 - Color choices already used by active variation dimensions on the selected meal are not offered as duplicate preset choices.
 - A user can remove a variation dimension from a meal while editing, and it no longer appears for new planning suggestions while historical data remains intact.
 - A user can edit meal and option diet tags so common-compatible mode can filter suggestions correctly.

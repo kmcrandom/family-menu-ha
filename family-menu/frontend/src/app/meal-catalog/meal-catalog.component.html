@@ -148,63 +148,6 @@
           <mat-form-field class="wide" appearance="outline"><mat-label>Notes</mat-label><textarea matInput rows="2" formControlName="notes"></textarea></mat-form-field>
         </form>
 
-        @if (isEditing) {
-          <div class="dimension-add-panel">
-            <div>
-              <h3>Add variation</h3>
-              <p>Reuse a variation type from the catalog, or create a new one.</p>
-            </div>
-
-            <div class="dimension-add-grid">
-              <mat-form-field appearance="outline">
-                <mat-label>Variation type</mat-label>
-                <mat-select [ngModel]="newDimensionKey" (ngModelChange)="selectNewDimensionType($event)">
-                  @for (type of reusableVariationTypes; track type.key) {
-                    <mat-option [value]="type.key">{{ type.name }}</mat-option>
-                  }
-                  <mat-option [value]="customDimensionKey">New variation type</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Name</mat-label>
-                <input matInput [(ngModel)]="newDimensionName" />
-              </mat-form-field>
-
-              @if (newDimensionKey === customDimensionKey) {
-                <mat-form-field appearance="outline">
-                  <mat-label>Key</mat-label>
-                  <input matInput [(ngModel)]="newDimensionCustomKey" placeholder="variation_custom_type" />
-                </mat-form-field>
-              }
-
-              <mat-checkbox [(ngModel)]="newDimensionRequired">Required</mat-checkbox>
-            </div>
-
-            <div class="color-picker-row" aria-label="Variation color">
-              @for (color of availableMaterialColors; track color) {
-                <button
-                  class="color-swatch"
-                  type="button"
-                  [class.selected]="newDimensionColor === color"
-                  [style.background]="color"
-                  (click)="newDimensionColor = color"
-                  [attr.aria-label]="'Use color ' + color"
-                ></button>
-              }
-              <label class="custom-color">
-                <span>Custom</span>
-                <input type="color" [(ngModel)]="newDimensionColor" />
-              </label>
-            </div>
-
-            <button mat-flat-button class="accent-action" type="button" (click)="addDimension()" [disabled]="!newDimensionKey || !newDimensionName.trim()">
-              <mat-icon>add</mat-icon>
-              Add variation
-            </button>
-          </div>
-        }
-
         <div class="dimension-stack">
           @for (dimension of activeDimensions; track dimension.id) {
             <mat-card class="dimension variation-tone" [ngClass]="variationToneClass(dimension)" [ngStyle]="variationToneStyle(dimension)">
@@ -215,25 +158,41 @@
                 </div>
                 <div class="dimension-actions">
                   @if (isEditing) {
-                    <div class="color-picker-row compact" aria-label="Dimension color">
-                      @for (color of availableMaterialColors; track color) {
-                        <button
-                          class="color-swatch"
-                          type="button"
-                          [class.selected]="dimension.color === color"
-                          [style.background]="color"
-                          (click)="updateDimension(dimension, { color })"
-                          [attr.aria-label]="'Use color ' + color + ' for ' + dimension.name"
-                        ></button>
-                      }
-                      <input
-                        class="inline-color-input"
-                        type="color"
-                        [ngModel]="dimension.color || fallbackColorForKey(dimension.key)"
-                        (change)="updateDimension(dimension, { color: $any($event.target).value })"
-                        [attr.aria-label]="'Choose custom color for ' + dimension.name"
-                      />
-                    </div>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      [matMenuTriggerFor]="dimensionColorMenu"
+                      matTooltip="Change variation color"
+                      [attr.aria-label]="'Change color for ' + dimension.name"
+                    >
+                      <mat-icon>colorize</mat-icon>
+                    </button>
+                    <mat-menu #dimensionColorMenu="matMenu" panelClass="color-menu">
+                      <div class="color-menu-content" (click)="$event.stopPropagation()">
+                        <span class="color-menu-title">Variation color</span>
+                        <div class="color-picker-row" [attr.aria-label]="'Color options for ' + dimension.name">
+                          @for (color of availableMaterialColorsForDimension(dimension); track color) {
+                            <button
+                              class="color-swatch"
+                              type="button"
+                              [class.selected]="colorSelected(dimension, color)"
+                              [style.background]="color"
+                              (click)="updateDimension(dimension, { color })"
+                              [attr.aria-label]="'Use color ' + color + ' for ' + dimension.name"
+                            ></button>
+                          }
+                        </div>
+                        <label class="custom-color">
+                          <span>Custom</span>
+                          <input
+                            type="color"
+                            [ngModel]="dimension.color || fallbackColorForKey(dimension.key)"
+                            (change)="updateDimension(dimension, { color: $any($event.target).value })"
+                            [attr.aria-label]="'Choose custom color for ' + dimension.name"
+                          />
+                        </label>
+                      </div>
+                    </mat-menu>
                     <mat-checkbox
                       class="small"
                       [ngModel]="dimension.required"
@@ -334,6 +293,80 @@
             </mat-card>
           }
         </div>
+
+        @if (isEditing) {
+          <div class="dimension-add-area">
+            @if (!showAddDimensionPanel) {
+              <button mat-stroked-button type="button" (click)="openAddDimensionPanel()">
+                <mat-icon>add</mat-icon>
+                Add variation
+              </button>
+            } @else {
+              <div class="dimension-add-panel">
+                <div class="dimension-add-head">
+                  <div>
+                    <h3>Add variation</h3>
+                    <p>Reuse a variation type from the catalog, or create a new one.</p>
+                  </div>
+                  <button mat-icon-button type="button" (click)="closeAddDimensionPanel()" matTooltip="Close add variation" aria-label="Close add variation">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+
+                <div class="dimension-add-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Variation type</mat-label>
+                    <mat-select [ngModel]="newDimensionKey" (ngModelChange)="selectNewDimensionType($event)">
+                      @for (type of reusableVariationTypes; track type.key) {
+                        <mat-option [value]="type.key">{{ type.name }}</mat-option>
+                      }
+                      <mat-option [value]="customDimensionKey">New variation type</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput [(ngModel)]="newDimensionName" />
+                  </mat-form-field>
+
+                  @if (newDimensionKey === customDimensionKey) {
+                    <mat-form-field appearance="outline">
+                      <mat-label>Key</mat-label>
+                      <input matInput [(ngModel)]="newDimensionCustomKey" placeholder="variation_custom_type" />
+                    </mat-form-field>
+                  }
+
+                  <mat-checkbox [(ngModel)]="newDimensionRequired">Required</mat-checkbox>
+                </div>
+
+                <div class="color-picker-row" aria-label="Variation color">
+                  @for (color of availableMaterialColors; track color) {
+                    <button
+                      class="color-swatch"
+                      type="button"
+                      [class.selected]="newDimensionColor === color"
+                      [style.background]="color"
+                      (click)="newDimensionColor = color"
+                      [attr.aria-label]="'Use color ' + color"
+                    ></button>
+                  }
+                  <label class="custom-color">
+                    <span>Custom</span>
+                    <input type="color" [(ngModel)]="newDimensionColor" />
+                  </label>
+                </div>
+
+                <div class="dimension-add-actions">
+                  <button mat-flat-button class="accent-action" type="button" (click)="addDimension()" [disabled]="!newDimensionKey || !newDimensionName.trim()">
+                    <mat-icon>add</mat-icon>
+                    Add variation
+                  </button>
+                  <button mat-stroked-button type="button" (click)="closeAddDimensionPanel()">Cancel</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </mat-card>
     }
   </div>

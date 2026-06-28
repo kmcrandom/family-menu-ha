@@ -37,6 +37,7 @@ export class MealCatalogComponent {
   newDimensionCustomKey = '';
   newDimensionRequired = false;
   newDimensionColor = '';
+  showAddDimensionPanel = false;
 
   readonly customDimensionKey = '__custom__';
   readonly materialColors = [
@@ -178,7 +179,7 @@ export class MealCatalogComponent {
       instructions_text: this.linesToText(meal.instructions),
       notes: meal.notes ?? '',
     });
-    this.resetNewDimension();
+    this.resetNewDimension(true);
     this.syncFormMode();
   }
 
@@ -286,6 +287,15 @@ export class MealCatalogComponent {
     });
   }
 
+  openAddDimensionPanel(): void {
+    if (!this.isEditing) return;
+    this.showAddDimensionPanel = true;
+  }
+
+  closeAddDimensionPanel(): void {
+    this.resetNewDimension(true);
+  }
+
   selectNewDimensionType(key: string): void {
     this.newDimensionKey = key;
     if (key === this.customDimensionKey) {
@@ -319,7 +329,7 @@ export class MealCatalogComponent {
       color: this.newDimensionColor || null,
     }).subscribe({
       next: () => {
-        this.resetNewDimension();
+        this.resetNewDimension(true);
         this.load(this.selected?.id, true);
       },
       error: () => this.fail('Unable to add variation.'),
@@ -387,6 +397,19 @@ export class MealCatalogComponent {
     return '#9e9e9e';
   }
 
+  availableMaterialColorsForDimension(dimension: VariationDimension): string[] {
+    const current = this.normalizeColor(dimension.color);
+    const used = this.usedDimensionColors;
+    return this.materialColors.filter((color) => {
+      const normalized = this.normalizeColor(color);
+      return normalized === current || !used.has(normalized);
+    });
+  }
+
+  colorSelected(dimension: VariationDimension, color: string): boolean {
+    return this.normalizeColor(dimension.color) === this.normalizeColor(color);
+  }
+
   private valueForDimension(key: string, name: string): Record<string, string> | string[] {
     const normalized = key.replace('variation_', '');
     if (normalized === 'vegetables') {
@@ -395,12 +418,13 @@ export class MealCatalogComponent {
     return { [normalized]: name };
   }
 
-  private resetNewDimension(): void {
+  private resetNewDimension(closePanel = false): void {
     this.newDimensionKey = '';
     this.newDimensionName = '';
     this.newDimensionCustomKey = '';
     this.newDimensionRequired = false;
     this.newDimensionColor = this.availableMaterialColors[0] ?? '#9e9e9e';
+    if (closePanel) this.showAddDimensionPanel = false;
   }
 
   private normalizeDimensionKey(value: string): string {
