@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8 - 2026-06-28
+
+- Add controlled randomness when regenerating unlocked meals and variation options.
+- Keep regeneration bounded to high-scoring eligible candidates while preserving locks, vacation blocks, duplicate prevention, and dietary compatibility.
+
 ## 0.1.7 - 2026-06-28
 
 - Move the Meal Catalog Add variation entry point under the current variation dimensions.
