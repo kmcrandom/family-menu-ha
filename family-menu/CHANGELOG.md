@@ -1,5 +1,11 @@
 # Family Menu Changelog
 
+## 0.1.7
+
+- Move the Meal Catalog Add variation entry point under the current variation dimensions.
+- Keep variation type, name, key, and color controls hidden until Add variation is activated.
+- Replace inline existing-variation color palettes with a color dropper icon that opens a color selection popup.
+
 ## 0.1.6
 
 - Move Meal Catalog Archive/Edit and Save/Cancel actions into the selected meal header.
