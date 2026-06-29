@@ -1,6 +1,71 @@
 from __future__ import annotations
 
 
+def test_create_meal_defaults_and_persists(client):
+    response = client.post(
+        "/api/v1/meals",
+        json={
+            "name": "Tuesday Tacos",
+            "tags": ["fast", "taco"],
+            "shared_ingredients": [
+                {"amount": "8", "unit": "each", "label": "tortillas"},
+                "salsa",
+            ],
+            "prep_ahead": ["Chop toppings."],
+            "instructions": ["Warm tortillas.", "Fill and serve."],
+            "source_url": "https://example.com/tacos",
+            "source_name": "Example Tacos",
+            "notes": "Use pantry beans when needed.",
+        },
+    )
+    assert response.status_code == 201
+    meal = response.json()
+    assert meal["id"] == "tuesday-tacos"
+    assert meal["name"] == "Tuesday Tacos"
+    assert meal["status"] == "active"
+    assert meal["likability"] == 80
+    assert meal["active_prep_minutes"] == 20
+    assert meal["cook_minutes"] == 20
+    assert meal["make_ahead_score"] == 50
+    assert meal["leftover_quality"] == 70
+    assert meal["leftover_style"] == "mixed"
+    assert meal["tags"] == ["fast", "taco"]
+    assert meal["shared_ingredients"] == [
+        {"label": "tortillas", "amount": "8", "unit": "each"},
+        {"label": "salsa"},
+    ]
+    assert meal["prep_ahead"] == ["Chop toppings."]
+    assert meal["instructions"] == ["Warm tortillas.", "Fill and serve."]
+    assert meal["source_url"] == "https://example.com/tacos"
+    assert meal["source_name"] == "Example Tacos"
+    assert meal["notes"] == "Use pantry beans when needed."
+    assert meal["variation_dimensions"] == []
+
+    reloaded = client.get("/api/v1/meals/tuesday-tacos")
+    assert reloaded.status_code == 200
+    assert reloaded.json()["name"] == "Tuesday Tacos"
+    assert any(candidate["id"] == "tuesday-tacos" for candidate in client.get("/api/v1/meals").json())
+
+
+def test_create_meal_generates_unique_slug(client):
+    first = client.post("/api/v1/meals", json={"name": "Tuesday Tacos"})
+    second = client.post("/api/v1/meals", json={"name": "Tuesday Tacos"})
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert first.json()["id"] == "tuesday-tacos"
+    assert second.json()["id"] == "tuesday-tacos-2"
+
+
+def test_create_meal_rejects_empty_name(client):
+    before = len(client.get("/api/v1/meals", params={"include_archived": "true"}).json())
+    response = client.post("/api/v1/meals", json={"name": "   "})
+    after = len(client.get("/api/v1/meals", params={"include_archived": "true"}).json())
+
+    assert response.status_code == 422
+    assert after == before
+
+
 def test_patch_meal_likability(client):
     response = client.patch("/api/v1/meals/sample-build-your-own-bowl", json={"likability": 77})
     assert response.status_code == 200

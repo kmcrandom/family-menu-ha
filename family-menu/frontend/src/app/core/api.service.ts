@@ -38,6 +38,10 @@ export class ApiService {
     return this.http.get<Meal>(this.apiUrl(`meals/${id}`));
   }
 
+  createMeal(payload: Partial<Meal>): Observable<Meal> {
+    return this.http.post<Meal>(this.apiUrl('meals'), payload);
+  }
+
   patchMeal(id: string, payload: Partial<Meal>): Observable<Meal> {
     return this.http.patch<Meal>(this.apiUrl(`meals/${id}`), payload);
   }

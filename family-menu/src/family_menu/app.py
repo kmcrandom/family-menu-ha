@@ -23,6 +23,7 @@ from .schemas import (
     HouseholdPatch,
     ImportDataRequest,
     MealEventCreate,
+    MealCreate,
     MealPatch,
     PlannedMealPatch,
     VacationBlockCreate,
@@ -66,6 +67,10 @@ def create_app(settings: Settings | None = None, conn: sqlite3.Connection | None
     @app.get("/api/v1/meals/{meal_id}")
     def get_meal(meal_id: str) -> dict:
         return guard(lambda: store.meal_response(meal_id), meal_id)
+
+    @app.post("/api/v1/meals", status_code=status.HTTP_201_CREATED)
+    def create_meal(payload: MealCreate) -> dict:
+        return guard(lambda: store.create_meal(payload), payload.name)
 
     @app.patch("/api/v1/meals/{meal_id}")
     def patch_meal(meal_id: str, payload: MealPatch) -> dict:

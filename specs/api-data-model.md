@@ -38,6 +38,19 @@ Fields:
 - `notes`: optional free text.
 - `created_at`, `updated_at`.
 
+Meal creation:
+
+- The API should expose `POST /api/v1/meals` for creating a user-defined meal from the Meal Catalog UI.
+- The create payload should accept the editable meal fields supported by `MealPatch`, with `name` required and all other fields optional.
+- The client should not be required to supply `id`, `status`, `created_at`, `updated_at`, or `variation_dimensions` when creating a meal.
+- The backend should generate a stable slug id from the meal name, or use an equivalent deterministic readable slug strategy, and append a suffix when needed to avoid collisions.
+- New meals should default to `status: active`, `likability: 80`, `active_prep_minutes: 20`, `cook_minutes: 20`, `make_ahead_score: 50`, `leftover_quality: 70`, `leftover_style: mixed`, empty list fields, and null optional source fields unless the create payload supplies values.
+- Empty or whitespace-only names should be rejected with a validation error and should not create a row.
+- Creating a meal should mark it as user-modified/private installation data and persist it in the local SQLite database.
+- The response should be the complete `Meal` shape, including an empty `variation_dimensions` array when no variations have been added yet.
+- Created active meals should be returned by `GET /api/v1/meals` and should be eligible for new planning suggestions, replacement selectors, export, and backup flows.
+- A newly created meal should not affect existing weekly plans or history until the user explicitly selects it or a future recommendation includes it.
+
 Recipe links and instructions are private catalog data:
 
 - Starter or tracked repo data should not include a household's specific selected recipe links or instructions unless they are generic examples.

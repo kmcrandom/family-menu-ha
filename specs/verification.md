@@ -3,6 +3,8 @@
 ## Backend Verification
 
 - Validate meal schema creation and updates.
+- Validate `POST /api/v1/meals` creates a meal with generated unique id, active status, default values, persisted editable fields, and an empty variation list.
+- Validate meal creation rejects empty or whitespace-only names without inserting a row.
 - Validate meal source URL, source name, and instructions persist through create/update/read flows.
 - Validate weekly plan creation.
 - Validate suggestion generation with no history.
@@ -51,7 +53,10 @@
 - Weekly Plan keeps the meal picker anchored next to the date block, and selected variation option text is vertically centered in its dropdown field.
 - Weekly Plan preserves the last viewed week when navigating away to another screen and back in the same browser session.
 - Weekly Plan opens meal instructions in a dialog and exposes source links when configured.
-- Meal Catalog supports meal, variation dimension, and variation option edit, archive, restore, search, label/tag filtering below the meal list, source links with open actions, instructions, and likability changes.
+- Meal Catalog supports meal create, edit, archive, restore, search, label/tag filtering below the meal list, source links with open actions, instructions, and likability changes.
+- Meal Catalog create flow opens a new editable draft, saves a named meal, selects the created meal read-only, validates missing names, and cancels without creating a row.
+- Newly created active meals appear in the Weekly Plan replacement selector after the catalog refreshes.
+- Meal Catalog supports variation dimension and variation option create/edit/archive/restore for created meals after the meal itself is saved.
 - Grocery and Prep shows aggregated grocery items and prep tasks.
 - Grocery and Prep preserves its last viewed week when navigating away and back in the same browser session.
 - Weekly Plan and Grocery and Prep remembered weeks are independent from each other.

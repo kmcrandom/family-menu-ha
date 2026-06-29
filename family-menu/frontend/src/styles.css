@@ -644,6 +644,11 @@ select {
   top: 0;
 }
 
+.catalog-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .catalog-list .mat-mdc-form-field-icon-suffix {
   align-items: center;
   display: inline-flex;
