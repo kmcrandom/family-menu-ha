@@ -32,6 +32,7 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 ## Primary Actions
 
 - Create meal.
+- Save newly created meal.
 - Enter edit mode for the selected meal.
 - Save meal edits.
 - Duplicate meal.
@@ -58,6 +59,17 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Save should persist meal edits from the top action area.
 - Cancel should exit edit mode and restore the form to the selected meal's saved values without saving.
 - Switching to a different existing meal should return the detail pane to read-only view mode for that meal.
+- Creating a meal should be available from the Meal Catalog screen without requiring seed-file edits, direct database edits, import/export, or developer tools.
+- The create action should start an editable new-meal draft with the same fields used for editing existing meals, including name, likability, timing, source, labels, shared grocery ingredients, prep tasks, instructions, and notes.
+- A new-meal draft should use neutral defaults that match existing meal editing defaults where practical: active status, likability 80, active prep 20 minutes, cook time 20 minutes, make-ahead 50, leftover quality 70, leftover style `mixed`, and empty optional lists/text fields.
+- Saving a new-meal draft should create a persisted active meal, assign a stable unique id derived from the meal name or an equivalent backend slug strategy, select the saved meal, and return the detail pane to read-only view mode.
+- The user should not need to enter a slug or id manually when creating a meal.
+- The meal name is required for saving a new meal. Empty or whitespace-only names should keep the user in edit mode and show a clear validation or save error without creating a blank meal.
+- If the generated meal id would collide with an existing meal, the backend should create a unique stable id rather than overwriting the existing meal.
+- Canceling a new-meal draft should discard the unsaved draft and return to the previously selected meal when one exists, otherwise to the empty/no-selection state.
+- New meals should appear in Meal Catalog search and label/tag filtering immediately after save.
+- New meals should be eligible for Weekly Plan suggestions and replacement selectors after save, subject to active status and compatibility filtering.
+- Newly created meals may start with no variation dimensions; the user can add variations after the meal has been created and selected.
 - Creating a meal or duplicating a meal should open the resulting meal in edit mode so the user can immediately fill in or adjust fields.
 - If the user has unsaved edits and attempts to leave edit mode or select another meal, the app should either preserve the local draft until saved or clearly confirm discarding changes.
 - Likability should be editable as a 0-100 percentage.
@@ -132,6 +144,12 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 
 ## Acceptance Criteria
 
+- A user can choose Create meal from Meal Catalog and receive an editable new-meal draft.
+- A user can save a new meal with at least a name and see it selected in read-only mode afterward.
+- Saving a new meal without a non-empty name does not create a meal and communicates the problem.
+- A newly saved meal appears in the catalog list, can be found by search, and can be filtered by any labels entered during creation.
+- A newly saved active meal is returned by the meals API and can be selected as a replacement meal in Weekly Plan without reloading the whole app.
+- Canceling a new-meal draft does not create a meal and restores the previous catalog selection when available.
 - Selecting an existing meal opens the detail pane in read-only mode by default.
 - The selected meal cannot be changed until the user activates the Edit action.
 - Activating Edit switches the selected meal detail into editable controls without changing the selected meal.

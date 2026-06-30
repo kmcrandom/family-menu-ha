@@ -147,6 +147,35 @@ class MealPatch(IngredientListMixin):
     notes: str | None = None
 
 
+class MealCreate(IngredientListMixin):
+    name: str
+    likability: int = Field(default=80, ge=0, le=100)
+    active_prep_minutes: int = Field(default=20, ge=0)
+    cook_minutes: int = Field(default=20, ge=0)
+    make_ahead_score: int = Field(default=50, ge=0, le=100)
+    leftover_quality: int = Field(default=70, ge=0, le=100)
+    leftover_style: str = "mixed"
+    tags: list[str] = Field(default_factory=list)
+    diet_tags: list[str] = Field(default_factory=list)
+    shared_ingredients: list[IngredientItem] = Field(default_factory=list)
+    primary_proteins: list[str] = Field(default_factory=list)
+    alternate_proteins: list[str] = Field(default_factory=list)
+    prep_ahead: list[str] = Field(default_factory=list)
+    instructions: list[str] = Field(default_factory=list)
+    source_url: str | None = None
+    source_name: str | None = None
+    simple_serving_variations: list[str] = Field(default_factory=list)
+    notes: str | None = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def required_name(cls, value: Any) -> str:
+        text = str(value or "").strip()
+        if not text:
+            raise ValueError("Meal name is required")
+        return text
+
+
 class VariationDimensionCreate(BaseModel):
     key: str
     name: str

@@ -31,6 +31,8 @@ export class MealCatalogComponent {
   error = '';
   saving = false;
   isEditing = false;
+  isCreatingMeal = false;
+  previousSelectedMealId = '';
   newOptionNames: Record<string, string> = {};
   newDimensionKey = '';
   newDimensionName = '';
@@ -113,6 +115,12 @@ export class MealCatalogComponent {
     return this.selected?.variation_dimensions.filter((dimension) => dimension.status === 'active') ?? [];
   }
 
+  get selectedTitle(): string {
+    if (!this.isCreatingMeal) return this.selected?.name ?? '';
+    const name = String(this.mealForm.get('name')?.value ?? '').trim();
+    return name || 'New meal';
+  }
+
   get reusableVariationTypes(): VariationTypeChoice[] {
     const activeKeys = new Set(this.activeDimensions.map((dimension) => dimension.key));
     const byKey = new Map<string, VariationTypeChoice>();
@@ -161,6 +169,11 @@ export class MealCatalogComponent {
   }
 
   selectMeal(meal: Meal, editMode = false): void {
+    if (this.isCreatingMeal && this.isEditing) {
+      if (!window.confirm('Discard this new meal draft?')) return;
+      this.isCreatingMeal = false;
+      this.previousSelectedMealId = '';
+    }
     this.selected = meal;
     this.isEditing = editMode;
     this.mealForm.patchValue({
@@ -183,6 +196,17 @@ export class MealCatalogComponent {
     this.syncFormMode();
   }
 
+  startCreatingMeal(): void {
+    this.previousSelectedMealId = this.isCreatingMeal ? this.previousSelectedMealId : this.selected?.id ?? '';
+    this.isCreatingMeal = true;
+    this.error = '';
+    this.selected = this.newMealDraft();
+    this.isEditing = true;
+    this.mealForm.reset(this.defaultMealFormValue());
+    this.resetNewDimension(true);
+    this.syncFormMode();
+  }
+
   startEditing(): void {
     if (!this.selected) return;
     this.isEditing = true;
@@ -191,35 +215,45 @@ export class MealCatalogComponent {
 
   cancelEditing(): void {
     if (!this.selected) return;
+    if (this.isCreatingMeal) {
+      const previous = this.meals.find((meal) => meal.id === this.previousSelectedMealId);
+      this.isCreatingMeal = false;
+      this.previousSelectedMealId = '';
+      this.error = '';
+      if (previous) {
+        this.selectMeal(previous, false);
+        return;
+      }
+      this.selected = undefined;
+      this.isEditing = false;
+      this.mealForm.reset(this.defaultMealFormValue());
+      this.resetNewDimension(true);
+      this.syncFormMode();
+      return;
+    }
     this.selectMeal(this.selected, false);
   }
 
   saveMeal(): void {
     if (!this.selected || !this.isEditing) return;
+    const payload = this.mealPayloadFromForm();
+    if (this.isCreatingMeal && !String(payload.name ?? '').trim()) {
+      this.error = 'Meal name is required.';
+      return;
+    }
     this.saving = true;
-    const raw = this.mealForm.getRawValue();
-    const payload: Partial<Meal> = {
-      name: raw.name ?? '',
-      likability: raw.likability ?? 80,
-      active_prep_minutes: raw.active_prep_minutes ?? 20,
-      cook_minutes: raw.cook_minutes ?? 20,
-      make_ahead_score: raw.make_ahead_score ?? 50,
-      leftover_quality: raw.leftover_quality ?? 70,
-      leftover_style: raw.leftover_style ?? 'mixed',
-      source_url: this.blankToNull(raw.source_url),
-      source_name: this.blankToNull(raw.source_name),
-      tags: this.textToTags(raw.tags_text ?? ''),
-      shared_ingredients: this.textToIngredients(raw.shared_ingredients_text ?? ''),
-      prep_ahead: this.textToLines(raw.prep_ahead_text ?? ''),
-      instructions: this.textToLines(raw.instructions_text ?? ''),
-      notes: raw.notes ?? '',
-    };
-    this.api.patchMeal(this.selected.id, payload).subscribe({
+    const request = this.isCreatingMeal
+      ? this.api.createMeal(payload)
+      : this.api.patchMeal(this.selected.id, payload);
+    request.subscribe({
       next: (meal) => {
         this.saving = false;
+        this.isCreatingMeal = false;
+        this.previousSelectedMealId = '';
+        this.error = '';
         this.load(meal.id, false);
       },
-      error: () => this.fail('Unable to save meal changes.'),
+      error: () => this.fail(this.isCreatingMeal ? 'Unable to create meal.' : 'Unable to save meal changes.'),
     });
   }
 
@@ -439,6 +473,71 @@ export class MealCatalogComponent {
 
   private normalizeColor(value?: string | null): string {
     return String(value ?? '').trim().toLowerCase();
+  }
+
+  private mealPayloadFromForm(): Partial<Meal> {
+    const raw = this.mealForm.getRawValue();
+    return {
+      name: String(raw.name ?? '').trim(),
+      likability: raw.likability ?? 80,
+      active_prep_minutes: raw.active_prep_minutes ?? 20,
+      cook_minutes: raw.cook_minutes ?? 20,
+      make_ahead_score: raw.make_ahead_score ?? 50,
+      leftover_quality: raw.leftover_quality ?? 70,
+      leftover_style: raw.leftover_style ?? 'mixed',
+      source_url: this.blankToNull(raw.source_url),
+      source_name: this.blankToNull(raw.source_name),
+      tags: this.textToTags(raw.tags_text ?? ''),
+      shared_ingredients: this.textToIngredients(raw.shared_ingredients_text ?? ''),
+      prep_ahead: this.textToLines(raw.prep_ahead_text ?? ''),
+      instructions: this.textToLines(raw.instructions_text ?? ''),
+      notes: raw.notes ?? '',
+    };
+  }
+
+  private newMealDraft(): Meal {
+    return {
+      id: '__new_meal__',
+      name: 'New meal',
+      status: 'active',
+      likability: 80,
+      active_prep_minutes: 20,
+      cook_minutes: 20,
+      make_ahead_score: 50,
+      leftover_quality: 70,
+      leftover_style: 'mixed',
+      tags: [],
+      diet_tags: [],
+      shared_ingredients: [],
+      primary_proteins: [],
+      alternate_proteins: [],
+      prep_ahead: [],
+      instructions: [],
+      source_url: null,
+      source_name: null,
+      simple_serving_variations: [],
+      notes: '',
+      variation_dimensions: [],
+    };
+  }
+
+  private defaultMealFormValue(): Record<string, string | number> {
+    return {
+      name: '',
+      likability: 80,
+      active_prep_minutes: 20,
+      cook_minutes: 20,
+      make_ahead_score: 50,
+      leftover_quality: 70,
+      leftover_style: 'mixed',
+      source_url: '',
+      source_name: '',
+      tags_text: '',
+      shared_ingredients_text: '',
+      prep_ahead_text: '',
+      instructions_text: '',
+      notes: '',
+    };
   }
 
   linesToText(values: string[] = []): string {

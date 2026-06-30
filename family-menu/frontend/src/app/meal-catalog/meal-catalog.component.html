@@ -15,6 +15,13 @@
 
   <div class="catalog-layout">
     <mat-card class="panel catalog-list">
+      <div class="catalog-actions">
+        <button mat-flat-button class="accent-action" type="button" (click)="startCreatingMeal()" [disabled]="saving">
+          <mat-icon>add</mat-icon>
+          Create meal
+        </button>
+      </div>
+
       <mat-form-field appearance="outline">
         <mat-label>Search</mat-label>
         <input matInput [(ngModel)]="query" placeholder="Meal, ingredient, protein, sauce" />
@@ -81,9 +88,9 @@
       <mat-card class="panel editor" [class.read-only]="!isEditing">
         <div class="section-title">
           <div>
-            <h2>{{ selected.name }}</h2>
+            <h2>{{ selectedTitle }}</h2>
             <p>
-              {{ activeDimensions.length }} variation dimensions ·
+              {{ isCreatingMeal ? 'New meal draft' : activeDimensions.length + ' variation dimensions' }} ·
               {{ isEditing ? 'Editing' : 'Read only' }}
             </p>
           </div>
@@ -278,7 +285,7 @@
                 }
               </div>
 
-              @if (isEditing) {
+              @if (isEditing && !isCreatingMeal) {
               <div class="add-option">
                 <mat-form-field appearance="outline">
                   <mat-label>Add option</mat-label>
@@ -294,7 +301,7 @@
           }
         </div>
 
-        @if (isEditing) {
+        @if (isEditing && !isCreatingMeal) {
           <div class="dimension-add-area">
             @if (!showAddDimensionPanel) {
               <button mat-stroked-button type="button" (click)="openAddDimensionPanel()">

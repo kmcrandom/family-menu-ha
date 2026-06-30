@@ -17,6 +17,7 @@ from .schemas import (
     HouseholdMemberPatch,
     HouseholdPatch,
     MealEventCreate,
+    MealCreate,
     MealPatch,
     PlannedMealPatch,
     Preferences,
@@ -612,6 +613,56 @@ class Store:
         meal.pop("k" + "id_variations", None)
         meal.pop("user_modified", None)
         return meal
+
+    def create_meal(self, payload: MealCreate) -> dict:
+        timestamp = now_iso()
+        meal_id = self._unique_meal_id(slugify(payload.name))
+        data = payload.model_dump()
+        self.conn.execute(
+            """
+            INSERT INTO meals(
+              id, name, status, likability, active_prep_minutes, cook_minutes,
+              make_ahead_score, leftover_quality, leftover_style, tags,
+              diet_tags, shared_ingredients, primary_proteins, alternate_proteins,
+              prep_ahead, instructions, source_url, source_name,
+              simple_serving_variations, notes, user_modified, created_at, updated_at
+            )
+            VALUES (?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            """,
+            (
+                meal_id,
+                data["name"],
+                data["likability"],
+                data["active_prep_minutes"],
+                data["cook_minutes"],
+                data["make_ahead_score"],
+                data["leftover_quality"],
+                data["leftover_style"],
+                dumps(data["tags"]),
+                dumps(data["diet_tags"]),
+                dumps(normalize_ingredient_items(data["shared_ingredients"])),
+                dumps(data["primary_proteins"]),
+                dumps(data["alternate_proteins"]),
+                dumps(data["prep_ahead"]),
+                dumps(data["instructions"]),
+                data["source_url"],
+                data["source_name"],
+                dumps(data["simple_serving_variations"]),
+                data["notes"],
+                timestamp,
+                timestamp,
+            ),
+        )
+        self.conn.commit()
+        return self.meal_response(meal_id)
+
+    def _unique_meal_id(self, base_id: str) -> str:
+        candidate = base_id
+        suffix = 2
+        while self.conn.execute("SELECT 1 FROM meals WHERE id = ?", (candidate,)).fetchone() is not None:
+            candidate = f"{base_id}-{suffix}"
+            suffix += 1
+        return candidate
 
     def patch_meal(self, meal_id: str, payload: MealPatch) -> dict:
         updates = payload.model_dump(exclude_unset=True)
