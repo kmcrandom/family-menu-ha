@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.10 - 2026-06-30
+
+- Keep new Meal Catalog drafts visually blank until the user enters values.
+- Stop showing default numbers in new meal fields such as likability, prep time, cook time, make-ahead score, and leftover quality.
+- Hide the Meal Catalog list behind a slide-over menu on phone-sized screens.
+- Move Create meal into the Meal Catalog list/menu controls while preserving the desktop side panel.
+- Verified with frontend build, browser desktop and phone-width checks, and CI backend, frontend, and add-on image jobs from PR #10.
+
 ## 0.1.9 - 2026-06-30
 
 - Add Meal Catalog support for creating new meals directly in the app.
