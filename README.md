@@ -46,6 +46,16 @@ The installable add-on lives in `family-menu/` and includes:
 
 The add-on stores its SQLite database at `/data/family-menu.sqlite` by default. Published installs pull `ghcr.io/kmcrandom/family-menu-ha:<version>`.
 
+## Release Verification
+
+Before treating a new Home Assistant add-on version as ready for update, wait for the tagged publish workflow to complete and verify the matching GHCR image tag exists:
+
+```bash
+python3 scripts/verify_release_image.py --version 0.1.9
+```
+
+The script reads the default image from `family-menu/config.yaml` and checks `docker manifest inspect ghcr.io/kmcrandom/family-menu-ha:<version>`. If Home Assistant refreshed the repository while the image was still publishing, retry the add-on update after this check succeeds.
+
 ## Private Data
 
 The default local database is `family-menu.db` in the repo root. It is ignored by git, along with `*.db`, private seed catalogs, and exports.
