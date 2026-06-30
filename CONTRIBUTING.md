@@ -14,4 +14,10 @@ cd ../..
 .venv/bin/python -m pytest -q
 ```
 
+For Home Assistant add-on releases, wait for the tagged publish workflow to finish before announcing the version as ready. Then verify the GHCR tag exists:
+
+```bash
+python3 scripts/verify_release_image.py --version <version>
+```
+
 Keep private databases, private seed catalogs, exports, and backups out of git. Public examples must stay generic.

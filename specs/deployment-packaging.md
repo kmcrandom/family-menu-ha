@@ -63,6 +63,8 @@ Release preparation should keep the Home Assistant add-on version and changelog 
 - The top changelog entry should summarize user-visible changes, packaging changes, and relevant verification notes.
 - The publish workflow should continue to read the image tag version from `family-menu/config.yaml`.
 - A release must not be tagged if the add-on changelog does not contain the matching version entry.
+- The matching GHCR image tag must exist before Home Assistant users are expected to update to the new add-on version. Home Assistant refreshes repository metadata from `main` and immediately pulls `ghcr.io/kmcrandom/family-menu-ha:<version>`; if `config.yaml` advertises a version before GHCR has that tag, Supervisor reports a transient `404 manifest unknown` update failure.
+- Release verification should include a direct manifest check for `ghcr.io/kmcrandom/family-menu-ha:<version>` after the publish workflow completes. If Supervisor already refreshed during the publish window, retrying the add-on update after the manifest exists should succeed without repository code changes.
 
 The add-on Dockerfile should follow the MinuteMetrics pattern:
 
