@@ -61,7 +61,7 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Switching to a different existing meal should return the detail pane to read-only view mode for that meal.
 - Creating a meal should be available from the Meal Catalog screen without requiring seed-file edits, direct database edits, import/export, or developer tools.
 - The create action should start an editable new-meal draft with the same fields used for editing existing meals, including name, likability, timing, source, labels, shared grocery ingredients, prep tasks, instructions, and notes.
-- A new-meal draft should use neutral defaults that match existing meal editing defaults where practical: active status, likability 80, active prep 20 minutes, cook time 20 minutes, make-ahead 50, leftover quality 70, leftover style `mixed`, and empty optional lists/text fields.
+- A new-meal draft should not prefill user-entered meal values. Text fields, list fields, source fields, tags, and notes should start empty. Numeric fields such as likability, active prep minutes, cook minutes, make-ahead score, and leftover quality should start blank rather than using default numbers. Select-style fields may show placeholders, but the user should not see default saved values before entering them.
 - Saving a new-meal draft should create a persisted active meal, assign a stable unique id derived from the meal name or an equivalent backend slug strategy, select the saved meal, and return the detail pane to read-only view mode.
 - The user should not need to enter a slug or id manually when creating a meal.
 - The meal name is required for saving a new meal. Empty or whitespace-only names should keep the user in edit mode and show a clear validation or save error without creating a blank meal.
@@ -76,6 +76,10 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - Meal numeric fields such as likability, prep minutes, cook minutes, make-ahead score, and leftover quality should use compact short-field widths on desktop and tablet.
 - Meal identity and short metadata fields should share rows where readable, while long text areas such as ingredients, prep tasks, and notes should remain wide.
 - The meal list and meal editor should keep a two-column master/detail layout on desktop and tablet where practical.
+- On phone-sized screens, the full meal list should not be persistently visible above or beside the detail pane. It should be hidden behind a slide-over or drawer-style menu opened by a compact menu icon button.
+- The phone slide-over meal menu should contain meal search, label/tag filtering, the filtered meal list, and the Create meal action.
+- The Create meal action should live with the meal menu/list controls. On desktop and tablet, it may remain in the visible side panel. On phone-sized screens, it should be available from the slide-over menu rather than the main detail pane.
+- Selecting a meal or starting a new meal from the phone slide-over should close the menu and show the selected or draft meal detail.
 - The meal list panel should show search first, with a compact label/tag filter icon in the search area.
 - The meal list panel should not show a persistent label/tag chip section below the list, because that consumes too much vertical space on phone-sized screens.
 - The meal list card should align near the top of the catalog layout and, on wider screens, should start in line with the meal editor card rather than leaving excessive empty space above it.
@@ -145,6 +149,7 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 ## Acceptance Criteria
 
 - A user can choose Create meal from Meal Catalog and receive an editable new-meal draft.
+- Creating a new meal starts with blank user-entered fields; numeric fields do not display default values before the user enters them.
 - A user can save a new meal with at least a name and see it selected in read-only mode afterward.
 - Saving a new meal without a non-empty name does not create a meal and communicates the problem.
 - A newly saved meal appears in the catalog list, can be found by search, and can be filtered by any labels entered during creation.
@@ -195,5 +200,8 @@ The Meal Catalog screen lets the user maintain the meals that suggestions draw f
 - A user can clear the selected label/tag filter from the search/filter area.
 - Meal Catalog labels do not appear as a persistent chip section below the meal list.
 - On phone-sized screens, label/tag filtering remains usable without the filter list being cut off.
+- On phone-sized screens, the meal catalog list is hidden by default and can be opened from a menu icon button as a slide-over menu.
+- On phone-sized screens, the Create meal action is inside the slide-over meal menu.
+- Opening a meal or Create meal from the phone slide-over closes the slide-over and keeps the detail/editing flow usable.
 - On wider screens, the meal list card starts in line with the meal editor card.
 - Meal Catalog remains compact enough on desktop and tablet that editing common meal metadata does not require scrolling through a long single-column form.

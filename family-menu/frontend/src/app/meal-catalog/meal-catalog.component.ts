@@ -32,6 +32,7 @@ export class MealCatalogComponent {
   saving = false;
   isEditing = false;
   isCreatingMeal = false;
+  isMealMenuOpen = false;
   previousSelectedMealId = '';
   newOptionNames: Record<string, string> = {};
   newDimensionKey = '';
@@ -61,12 +62,12 @@ export class MealCatalogComponent {
 
   readonly mealForm = this.fb.group({
     name: [''],
-    likability: [80],
-    active_prep_minutes: [20],
-    cook_minutes: [20],
-    make_ahead_score: [50],
-    leftover_quality: [70],
-    leftover_style: ['mixed'],
+    likability: [null as number | null],
+    active_prep_minutes: [null as number | null],
+    cook_minutes: [null as number | null],
+    make_ahead_score: [null as number | null],
+    leftover_quality: [null as number | null],
+    leftover_style: [''],
     source_url: [''],
     source_name: [''],
     tags_text: [''],
@@ -194,6 +195,7 @@ export class MealCatalogComponent {
     });
     this.resetNewDimension(true);
     this.syncFormMode();
+    this.closeMealMenu();
   }
 
   startCreatingMeal(): void {
@@ -205,6 +207,7 @@ export class MealCatalogComponent {
     this.mealForm.reset(this.defaultMealFormValue());
     this.resetNewDimension(true);
     this.syncFormMode();
+    this.closeMealMenu();
   }
 
   startEditing(): void {
@@ -388,6 +391,14 @@ export class MealCatalogComponent {
     this.selectedTag = '';
   }
 
+  openMealMenu(): void {
+    this.isMealMenuOpen = true;
+  }
+
+  closeMealMenu(): void {
+    this.isMealMenuOpen = false;
+  }
+
   sourceLabel(meal: Meal): string {
     return meal.source_name || meal.source_url || 'Source';
   }
@@ -477,14 +488,27 @@ export class MealCatalogComponent {
 
   private mealPayloadFromForm(): Partial<Meal> {
     const raw = this.mealForm.getRawValue();
+    const numericPayload = this.isCreatingMeal
+      ? {
+          ...this.createNumberPayload('likability', raw.likability),
+          ...this.createNumberPayload('active_prep_minutes', raw.active_prep_minutes),
+          ...this.createNumberPayload('cook_minutes', raw.cook_minutes),
+          ...this.createNumberPayload('make_ahead_score', raw.make_ahead_score),
+          ...this.createNumberPayload('leftover_quality', raw.leftover_quality),
+        }
+      : {
+          likability: this.numberOrDefault(raw.likability, 80),
+          active_prep_minutes: this.numberOrDefault(raw.active_prep_minutes, 20),
+          cook_minutes: this.numberOrDefault(raw.cook_minutes, 20),
+          make_ahead_score: this.numberOrDefault(raw.make_ahead_score, 50),
+          leftover_quality: this.numberOrDefault(raw.leftover_quality, 70),
+        };
     return {
       name: String(raw.name ?? '').trim(),
-      likability: raw.likability ?? 80,
-      active_prep_minutes: raw.active_prep_minutes ?? 20,
-      cook_minutes: raw.cook_minutes ?? 20,
-      make_ahead_score: raw.make_ahead_score ?? 50,
-      leftover_quality: raw.leftover_quality ?? 70,
-      leftover_style: raw.leftover_style ?? 'mixed',
+      ...numericPayload,
+      ...(this.isCreatingMeal && !String(raw.leftover_style ?? '').trim()
+        ? {}
+        : { leftover_style: String(raw.leftover_style ?? '').trim() || 'mixed' }),
       source_url: this.blankToNull(raw.source_url),
       source_name: this.blankToNull(raw.source_name),
       tags: this.textToTags(raw.tags_text ?? ''),
@@ -521,15 +545,15 @@ export class MealCatalogComponent {
     };
   }
 
-  private defaultMealFormValue(): Record<string, string | number> {
+  private defaultMealFormValue(): Record<string, string | number | null> {
     return {
       name: '',
-      likability: 80,
-      active_prep_minutes: 20,
-      cook_minutes: 20,
-      make_ahead_score: 50,
-      leftover_quality: 70,
-      leftover_style: 'mixed',
+      likability: null,
+      active_prep_minutes: null,
+      cook_minutes: null,
+      make_ahead_score: null,
+      leftover_quality: null,
+      leftover_style: '',
       source_url: '',
       source_name: '',
       tags_text: '',
@@ -538,6 +562,21 @@ export class MealCatalogComponent {
       instructions_text: '',
       notes: '',
     };
+  }
+
+  private createNumberPayload(key: keyof Pick<Meal, 'likability' | 'active_prep_minutes' | 'cook_minutes' | 'make_ahead_score' | 'leftover_quality'>, value: unknown): Partial<Meal> {
+    const parsed = this.optionalNumber(value);
+    return parsed === undefined ? {} : { [key]: parsed };
+  }
+
+  private optionalNumber(value: unknown): number | undefined {
+    if (value === null || value === undefined || value === '') return undefined;
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+
+  private numberOrDefault(value: unknown, fallback: number): number {
+    return this.optionalNumber(value) ?? fallback;
   }
 
   linesToText(values: string[] = []): string {
