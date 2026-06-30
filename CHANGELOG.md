@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.9 - 2026-06-30
+
+- Add Meal Catalog support for creating new meals directly in the app.
+- Add a `POST /api/v1/meals` API with generated unique meal ids, default meal values, and SQLite persistence.
+- Validate empty meal names and make newly created active meals available to Weekly Plan replacement choices.
+
 ## 0.1.8 - 2026-06-28
 
 - Add controlled randomness when regenerating unlocked meals and variation options.

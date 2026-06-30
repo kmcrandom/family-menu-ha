@@ -1,6 +1,6 @@
 [project]
 name = "family-menu"
-version = "0.1.8"
+version = "0.1.9"
 description = "Local-first weekly dinner planning app for a mixed-diet household."
 requires-python = ">=3.11"
 dependencies = [
