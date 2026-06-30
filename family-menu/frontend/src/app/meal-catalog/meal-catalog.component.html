@@ -13,75 +13,105 @@
     <div class="notice error">{{ error }}</div>
   }
 
-  <div class="catalog-layout">
-    <mat-card class="panel catalog-list">
-      <div class="catalog-actions">
-        <button mat-flat-button class="accent-action" type="button" (click)="startCreatingMeal()" [disabled]="saving">
-          <mat-icon>add</mat-icon>
-          Create meal
+  <ng-template #mealMenuContent>
+    <div class="catalog-actions">
+      <button mat-flat-button class="accent-action" type="button" (click)="startCreatingMeal()" [disabled]="saving">
+        <mat-icon>add</mat-icon>
+        Create meal
+      </button>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Search</mat-label>
+      <input matInput [(ngModel)]="query" placeholder="Meal, ingredient, protein, sauce" />
+      <mat-icon matSuffix>search</mat-icon>
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        [matMenuTriggerFor]="labelFilterMenu"
+        [disabled]="!availableTags.length"
+        [matTooltip]="selectedTag ? 'Change label filter' : 'Filter by label'"
+        aria-label="Filter meals by label"
+      >
+        <mat-icon>{{ selectedTag ? 'filter_alt' : 'filter_list' }}</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-menu #labelFilterMenu="matMenu" panelClass="label-filter-menu">
+      @if (selectedTag) {
+        <button mat-menu-item type="button" (click)="clearTagFilter()">
+          <mat-icon>close</mat-icon>
+          <span>All labels</span>
+        </button>
+      }
+      @for (tag of availableTags; track tag) {
+        <button
+          mat-menu-item
+          type="button"
+          [class.active]="selectedTag === tag"
+          (click)="selectTag(tag)"
+        >
+          <mat-icon>{{ selectedTag === tag ? 'check' : 'label' }}</mat-icon>
+          <span>{{ tag }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    @if (selectedTag) {
+      <div class="selected-label-filter" aria-label="Selected meal label filter">
+        <span>Label: {{ selectedTag }}</span>
+        <button mat-icon-button type="button" (click)="clearTagFilter()" matTooltip="Clear label filter" aria-label="Clear label filter">
+          <mat-icon>close</mat-icon>
         </button>
       </div>
+    }
 
-      <mat-form-field appearance="outline">
-        <mat-label>Search</mat-label>
-        <input matInput [(ngModel)]="query" placeholder="Meal, ingredient, protein, sauce" />
-        <mat-icon matSuffix>search</mat-icon>
+    <mat-nav-list class="list">
+      @for (meal of filteredMeals; track meal.id) {
         <button
-          mat-icon-button
-          matSuffix
+          mat-button
           type="button"
-          [matMenuTriggerFor]="labelFilterMenu"
-          [disabled]="!availableTags.length"
-          [matTooltip]="selectedTag ? 'Change label filter' : 'Filter by label'"
-          aria-label="Filter meals by label"
+          class="list-row"
+          [class.active]="selected?.id === meal.id"
+          [class.archived]="meal.status === 'archived'"
+          (click)="selectMeal(meal)"
         >
-          <mat-icon>{{ selectedTag ? 'filter_alt' : 'filter_list' }}</mat-icon>
+          <strong>{{ meal.name }}</strong>
         </button>
-      </mat-form-field>
-
-      <mat-menu #labelFilterMenu="matMenu" panelClass="label-filter-menu">
-        @if (selectedTag) {
-          <button mat-menu-item type="button" (click)="clearTagFilter()">
-            <mat-icon>close</mat-icon>
-            <span>All labels</span>
-          </button>
-        }
-        @for (tag of availableTags; track tag) {
-          <button
-            mat-menu-item
-            type="button"
-            [class.active]="selectedTag === tag"
-            (click)="selectTag(tag)"
-          >
-            <mat-icon>{{ selectedTag === tag ? 'check' : 'label' }}</mat-icon>
-            <span>{{ tag }}</span>
-          </button>
-        }
-      </mat-menu>
-
-      @if (selectedTag) {
-        <div class="selected-label-filter" aria-label="Selected meal label filter">
-          <span>Label: {{ selectedTag }}</span>
-          <button mat-icon-button type="button" (click)="clearTagFilter()" matTooltip="Clear label filter" aria-label="Clear label filter">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
       }
+    </mat-nav-list>
+  </ng-template>
 
-      <mat-nav-list class="list">
-        @for (meal of filteredMeals; track meal.id) {
-          <button
-            mat-button
-            type="button"
-            class="list-row"
-            [class.active]="selected?.id === meal.id"
-            [class.archived]="meal.status === 'archived'"
-            (click)="selectMeal(meal)"
-          >
-            <strong>{{ meal.name }}</strong>
-          </button>
-        }
-      </mat-nav-list>
+  <button
+    mat-stroked-button
+    class="meal-menu-button"
+    type="button"
+    (click)="openMealMenu()"
+    aria-label="Open meal catalog menu"
+  >
+    <mat-icon>menu</mat-icon>
+    Meals
+  </button>
+
+  @if (isMealMenuOpen) {
+    <div class="meal-menu-backdrop" (click)="closeMealMenu()" aria-hidden="true"></div>
+    <aside class="meal-menu-drawer" aria-label="Meal catalog menu">
+      <div class="meal-menu-drawer-head">
+        <h2>Meals</h2>
+        <button mat-icon-button type="button" (click)="closeMealMenu()" matTooltip="Close meal menu" aria-label="Close meal catalog menu">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="catalog-list catalog-list-drawer">
+        <ng-container *ngTemplateOutlet="mealMenuContent"></ng-container>
+      </div>
+    </aside>
+  }
+
+  <div class="catalog-layout">
+    <mat-card class="panel catalog-list catalog-list-desktop">
+      <ng-container *ngTemplateOutlet="mealMenuContent"></ng-container>
     </mat-card>
 
     @if (selected) {
